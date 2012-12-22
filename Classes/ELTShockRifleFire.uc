@@ -20,7 +20,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 22/12/2012 6:36:14 PM$
+ * @version $wotgreal_dt: 22/12/2012 8:51:06 PM$
  */
 class ELTShockRifleFire extends ShockBeamFire;
 
@@ -42,14 +42,9 @@ function Timer()
 
 DefaultProperties
 {
+    AmmoPerFire=99
     AmmoRegenTime=0.3
-    FireRate=1.1
 
     DamageType=class'DamTypeShockBeam'
-    DamageMin=1000
-    DamageMax=1000
-    Momentum=100000
-
-    AmmoPerFire=99
     AmmoClass=class'EliteMod.ELTShockRifleAmmo'
 }

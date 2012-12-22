@@ -20,7 +20,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 22/12/2012 6:08:51 PM$
+ * @version $wotgreal_dt: 22/12/2012 8:57:50 PM$
  */
 class ELTGameInfo extends xTeamGame;
 
@@ -33,6 +33,7 @@ var int CurrentAttackingTeam;
 event InitGame(string Options, out string Error)
 {
     Super.InitGame(Options, Error);
+
     CurrentAttackingTeam = TEAM_RED;
 }
 
@@ -46,6 +47,19 @@ function InitGameReplicationInfo()
     ELTGameReplication(GameReplicationInfo).CurrentAttackingTeam = CurrentAttackingTeam;
 }
 
+event PostBeginPlay()
+{
+    local GameRules EliteRules;
+    super.PostBeginPlay();
+
+    EliteRules = Spawn(class'EliteMod.ELTGameRules');
+    if ( Level.Game.GameRulesModifiers == None ) {
+        Level.Game.GameRulesModifiers = EliteRules;
+    } else {
+        Level.Game.GameRulesModifiers.AddGameRules(EliteRules);
+    }
+    Log("------------------------ pbp -----");
+}
 
 function RestartPlayer(Controller C)
 {
@@ -59,14 +73,38 @@ function RestartPlayer(Controller C)
     Team = C.GetTeamNum();
     if (Team == 255)
         return;
-
-    if ( Team == CurrentAttackingTeam ) {
-        C.Pawn.CreateInventory("EliteMod.ELTShockRifle");
-    } else {
-        C.Pawn.CreateInventory("EliteMod.ELTRocketLauncher");
-    }
 }
 
+/**
+ * AddGameSpecificInventory()
+ *
+ * Give the PRI weapons and health based on his role.
+ * We ask the GRI to tell us if his pawns controller team is on defense.
+ */
+function AddGameSpecificInventory(Pawn P)
+{
+    local int Team;
+    Super.AddGameSpecificInventory(P);
+
+    if (P == none || P.Controller == none )
+        return;
+
+    Team = P.Controller.GetTeamNum();
+
+    // is defender or attacker?
+    if ( Team == CurrentAttackingTeam ) {
+        P.CreateInventory("EliteMod.ELTShockRifle");
+        P.Health = 4;
+        P.HealthMax = 4;
+    } else {
+        P.CreateInventory("EliteMod.ELTRocketLauncher");
+        P.Health = 1;
+        P.HealthMax = 1;
+    }
+
+    // initiate a weaponswitch to fix the "whatToDoNext with no weapon"
+    P.NextWeapon();
+}
 
 function ScoreKill(Controller Killer, Controller Other) {
     if ( Killer == None && Other != None ) {
@@ -74,18 +112,6 @@ function ScoreKill(Controller Killer, Controller Other) {
         return;
     }
     super.ScoreKill(Killer, Other);
-}
-
-function bool CheckEndGame(PlayerReplicationInfo Winner, string Reason)
-{
-    Log("## CheckEndGame "$Reason);
-    Log("   - Winner:"@Winner);
-
-    if ( Winner != None ) {
-        return super.CheckEndGame(Winner, Reason);
-    }
-
-    return false;
 }
 
 DefaultProperties

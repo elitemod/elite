@@ -20,15 +20,15 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 22/12/2012 6:48:50 PM$
+ * @version $wotgreal_dt: 22/12/2012 8:52:08 PM$
  */
 class ELTRocketLauncherFire extends RocketFire;
 
 var float AmmoRegenTime;
 
-function PlayFireEnd()
+function PlayFiring()
 {
-    Super.PlayFireEnd();
+    Super.PlayFiring();
     SetTimer(AmmoRegenTime, true);
 }
 
@@ -42,17 +42,12 @@ function Timer()
 
 function Projectile SpawnProjectile(Vector Start, Rotator Dir)
 {
-    local Projectile p;
-
-    p = Spawn(class'ELTRocketLauncherProj',,, Start, Dir);
-    if ( P != None )
-        p.Damage *= DamageAtten;
-    return p;
+    return Spawn(class'ELTRocketLauncherProj',,, Start, Dir);
 }
-
 
 DefaultProperties
 {
-    AmmoRegenTime=1.0
-    FireRate=0.5
+    FireRate=0.3
+    AmmoRegenTime=0.8
+    AmmoClass=class'EliteMod.ELTRocketLauncherAmmo'
 }

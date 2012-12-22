@@ -20,7 +20,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 22/12/2012 6:47:53 PM$
+ * @version $wotgreal_dt: 22/12/2012 8:30:45 PM$
  */
 class ELTRocketLauncher extends RocketLauncher;
 
@@ -30,4 +30,5 @@ DefaultProperties
     bCanThrow=false
     FireModeClass(0)=ELTRocketLauncherFire
     FireModeClass(1)=ELTRocketLauncherFireM
+    ELTRocketLauncherAmmo
 }

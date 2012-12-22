@@ -21,8 +21,8 @@ simulated function PostBeginPlay()
 
 DefaultProperties
 {
-    speed=2300.0
-    MaxSpeed=2300.0
+    speed=3000.0
+    MaxSpeed=3000.0
     Damage=1.0
     DamageRadius=220.0
     MomentumTransfer=50000
