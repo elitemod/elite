@@ -20,7 +20,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 22/12/2012 6:07:55 PM$
+ * @version $wotgreal_dt: 23/12/2012 1:10:11 PM$
  */
 class ELTMutatorPickups extends Mutator;
 
@@ -61,10 +61,11 @@ function bool AlwaysKeep(Actor Other)
 
 function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
 {
+    Log("Check:"@Other);
+
     if ( Other.IsA('Weapon') )
     {
-        if ( !Other.IsA(WeaponName[0]) && !Other.IsA(WeaponName[1]) )
-        {
+        if ( !Other.IsA(WeaponName[0]) && !Other.IsA(WeaponName[1]) ) {
             Level.Game.bWeaponStay = false;
             return false;
         }
