@@ -20,7 +20,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 23/12/2012 4:49:19 PM$
+ * @version $wotgreal_dt: 24/12/2012 5:06:16 PM$
  */
 class ELTGameReplication extends GameReplicationInfo;
 
@@ -28,6 +28,10 @@ var int CurrentAttackingTeam, CurrentRound;
 var int RoundTimeLimit, GoalActivationTime;
 var int AttackingPlayerNum;
 var bool bRoundInProgress;
+
+// ============================================================================
+// Implementation
+// ============================================================================
 
 enum ERoundWinner
 {

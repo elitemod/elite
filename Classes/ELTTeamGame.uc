@@ -29,13 +29,21 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 4:41:12 PM$
+ * @version $wotgreal_dt: 24/12/2012 7:33:43 PM$
  */
-class ELTTeamGame extends xTeamGame;
+class ELTTeamGame extends xTeamGame
+    config;
 
 var Array<ELTPlayerSpawnManager> SpawnManagers;
 var int CurrentAttackingTeam, FirstAttackingTeam;
 var int AttackingPlayerNum;
+
+var config  string AttackerWeapon, DefenderWeapon;
+var config  int AttackerHealth, DefenderHealth;
+
+// ============================================================================
+// Implementation
+// ============================================================================
 
 /**
  * InitGame()
@@ -247,13 +255,13 @@ function AddGameSpecificInventory(Pawn P)
         return;
 
     if ( IsAttackingTeam ( P.Controller.GetTeamNum() ) ) {
-        P.CreateInventory("EliteMod.ELTShockRifle");
-        P.Health = 4;
-        P.HealthMax = 4;
+        P.CreateInventory( AttackerWeapon );
+        P.Health = AttackerHealth;
+        P.HealthMax = AttackerHealth;
     } else {
-        P.CreateInventory("EliteMod.ELTRocketLauncher");
-        P.Health = 1;
-        P.HealthMax = 1;
+        P.CreateInventory( DefenderWeapon );
+        P.Health = DefenderHealth;
+        P.HealthMax = DefenderHealth;
     }
 
     P.NextWeapon();
@@ -442,6 +450,11 @@ function float RatePlayerStart(NavigationPoint N, byte Team, Controller Player)
     return -9000000;
 }
 
+
+// ============================================================================
+// Defaults
+// ============================================================================
+
 DefaultProperties
 {
     MaxTeamSize=3
@@ -466,6 +479,12 @@ DefaultProperties
     bWeaponShouldViewShake=false
     bBalanceTeams=true
     bWeaponStay=true
+
+    // config options
+    AttackerWeapon="EliteMod.ELTLightning"
+    DefenderWeapon="EliteMod.ELTRocketLauncher"
+    AttackerHealth=4
+    DefenderHealth=1
 
     // classes
     PlayerControllerClassName="EliteMod.ELTPlayer"

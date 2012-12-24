@@ -17,14 +17,16 @@
  * ELTMutatorPickups
  *
  * Mutator for dealing with pickup and weapon replacements
+ * This one also replaces Assault PlayerSpawnManagers and our
+ * EliteMapUtils dummies
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 4:46:22 PM$
+ * @version $wotgreal_dt: 24/12/2012 7:25:48 PM$
  */
 class ELTLevelMutator extends Mutator;
 
-var name WeaponName[2];
+var name WeaponName[3];
 
 // ============================================================================
 // Implementation
@@ -52,6 +54,7 @@ function bool AlwaysKeep(Actor Other)
 {
     if ( Other.IsA(WeaponName[0])
         || Other.IsA(WeaponName[1])
+        || Other.IsA(WeaponName[2])
         || Other.IsA('ELTPlayerSpawnManager')
         || Other.IsA('ELTObjective') )
     {
@@ -95,7 +98,7 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
 
     if ( Other.IsA('Weapon') )
     {
-        if ( !Other.IsA(WeaponName[0]) && !Other.IsA(WeaponName[1]) ) {
+        if ( !Other.IsA(WeaponName[0]) && !Other.IsA(WeaponName[1]) && !Other.IsA(WeaponName[2]) ) {
             Level.Game.bWeaponStay = false;
             return false;
         }
@@ -116,6 +119,7 @@ defaultproperties
 {
     WeaponName[0]=ELTRocketLauncher
     WeaponName[1]=ELTShockRifle
+    WeaponName[2]=ELTLightning
 
     GroupName="Arena"
     IconMaterialName="MutatorArt.nosym"

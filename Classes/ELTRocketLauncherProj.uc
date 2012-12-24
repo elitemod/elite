@@ -5,6 +5,10 @@ class ELTRocketLauncherProj extends RocketProj;
 
 var NewLinkTrail FlashyTrail;
 
+// ============================================================================
+// Implementation
+// ============================================================================
+
 simulated function Destroyed()
 {
     if ( FlashyTrail != None )
@@ -30,10 +34,14 @@ simulated function PostBeginPlay()
     super(Projectile).PostBeginPlay();
 }
 
+// ============================================================================
+// Defaults
+// ============================================================================
+
 DefaultProperties
 {
-    speed=3000.0
-    MaxSpeed=3000.0
+    speed=2600.0
+    MaxSpeed=2600.0
     Damage=1.0
     DamageRadius=220.0
     MomentumTransfer=50000

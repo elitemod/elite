@@ -20,9 +20,13 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 4:48:50 PM$
+ * @version $wotgreal_dt: 24/12/2012 5:04:47 PM$
  */
 class ELTPlayer extends xPlayer;
+
+// ============================================================================
+// Defaults
+// ============================================================================
 
 DefaultProperties
 {

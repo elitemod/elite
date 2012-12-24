@@ -27,13 +27,16 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 4:52:54 PM$
+ * @version $wotgreal_dt: 24/12/2012 5:05:57 PM$
  */
 class ELTPlayerSpawnManager extends PlayerSpawnManager;
 
+// ============================================================================
+// Implementation
+// ============================================================================
+
 /**
  * ApprovePlayerStart()
- *
  * Is the PlayerStart for the correct Player's Team ?
  */
 singular function bool ApprovePlayerStart(PlayerStart P, byte Team, Controller Player)
@@ -60,6 +63,10 @@ singular function bool ApprovePlayerStart(PlayerStart P, byte Team, Controller P
 
     return true;
 }
+
+// ============================================================================
+// Defaults
+// ============================================================================
 
 DefaultProperties
 {

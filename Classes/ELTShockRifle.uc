@@ -20,13 +20,17 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 22/12/2012 6:33:36 PM$
+ * @version $wotgreal_dt: 24/12/2012 5:07:46 PM$
  */
 class ELTShockRifle extends ShockRifle;
 
+// ============================================================================
+// Defaults
+// ============================================================================
+
 DefaultProperties
 {
-    ItemName="ELITE ShockRifle"
+    ItemName="ELITE Shock Rifle"
     bCanThrow=false
     FireModeClass(0)=ELTShockRifleFire
     FireModeClass(1)=ELTShockRifleFire

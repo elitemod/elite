@@ -20,11 +20,15 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 22/12/2012 8:52:08 PM$
+ * @version $wotgreal_dt: 24/12/2012 5:07:12 PM$
  */
 class ELTRocketLauncherFire extends RocketFire;
 
 var float AmmoRegenTime;
+
+// ============================================================================
+// Implementation
+// ============================================================================
 
 function PlayFiring()
 {
@@ -44,6 +48,10 @@ function Projectile SpawnProjectile(Vector Start, Rotator Dir)
 {
     return Spawn(class'ELTRocketLauncherProj',,, Start, Dir);
 }
+
+// ============================================================================
+// Defaults
+// ============================================================================
 
 DefaultProperties
 {

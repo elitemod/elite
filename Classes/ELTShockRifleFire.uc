@@ -20,11 +20,15 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 22/12/2012 8:51:06 PM$
+ * @version $wotgreal_dt: 24/12/2012 5:05:12 PM$
  */
 class ELTShockRifleFire extends ShockBeamFire;
 
 var float AmmoRegenTime;
+
+// ============================================================================
+// Implementation
+// ============================================================================
 
 function PlayFireEnd()
 {
@@ -39,6 +43,10 @@ function Timer()
     else
         SetTimer(0, false);
 }
+
+// ============================================================================
+// Defaults
+// ============================================================================
 
 DefaultProperties
 {

@@ -18,9 +18,13 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 4:43:35 PM$
+ * @version $wotgreal_dt: 24/12/2012 5:06:00 PM$
  */
 class ELTPlayerReplication extends PlayerReplicationInfo;
+
+// ============================================================================
+// Implementation
+// ============================================================================
 
 simulated function string GetLocationName()
 {

@@ -26,7 +26,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 4:36:48 PM$
+ * @version $wotgreal_dt: 24/12/2012 5:05:23 PM$
  */
 class ELTRoundGame extends ELTTeamGame;
 
@@ -49,6 +49,10 @@ var name  DrawGameSound;
 var name  AttackerWinRound[2];
 var name  DefenderWinRound[2];
 var name  TeamWinRound[2];
+
+// ============================================================================
+// Implementation
+// ============================================================================
 
 /**
  * InitGame()
@@ -438,7 +442,9 @@ state MatchInProgress
     }
 }
 
-
+// ============================================================================
+// Defaults
+// ============================================================================
 
 DefaultProperties
 {

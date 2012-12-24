@@ -20,13 +20,17 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 22/12/2012 8:30:45 PM$
+ * @version $wotgreal_dt: 24/12/2012 5:08:32 PM$
  */
 class ELTRocketLauncher extends RocketLauncher;
 
+// ============================================================================
+// Defaults
+// ============================================================================
+
 DefaultProperties
 {
-    ItemName="ELITE RocketLauncher"
+    ItemName="ELITE Rocket Launcher Xtreme"
     bCanThrow=false
     FireModeClass(0)=ELTRocketLauncherFire
     FireModeClass(1)=ELTRocketLauncherFireM
