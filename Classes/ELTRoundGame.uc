@@ -26,7 +26,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 5:05:23 PM$
+ * @version $wotgreal_dt: 24/12/2012 8:42:49 PM$
  */
 class ELTRoundGame extends ELTTeamGame;
 
@@ -210,29 +210,22 @@ function EndRound(ERER_Reason RoundEndReason, Pawn Instigator, String Reason)
     }
 
     // Increase Team Score
-    // =========================================================
     Teams[ScoringTeam].Score += 1.0;
     Teams[ScoringTeam].NetUpdateTime = Level.TimeSeconds - 1;
     TeamScoreEvent(ScoringTeam, 1, "endround_scoring_team");
     AnnounceScore(ScoringTeam);
-
-    // =========================================================
     ReplicateUpdatedGameInfo();
 
     Log("---------------------------------------------- EndRound");
     Log("  EndRound Reason: "@Reason);
-
     if ( Instigator != None )
         Log("  Scoring Instigator: "@Instigator.GetHumanReadableName()$", Team:"@Instigator.GetTeamNum());
-
-    Log("  Scoring Team Index: "@ScoringTeam);
-    Log("  Scoring IsAttackingTeam: "@IsAttackingTeam(ScoringTeam));
-    Log("  Scoring Team Score: "@GameReplicationInfo.Teams[ScoringTeam].Score );
+    Log("  Scoring Team is: "@ScoringTeam);
+    Log("  Scoring was attacking: "@IsAttackingTeam(ScoringTeam));
+    Log("  New Team Score: "@GameReplicationInfo.Teams[ScoringTeam].Score );
 
     // check if match is over
-    // =========================================================
     if ( CurrentRound == NumRounds ) {
-        Log("---------------------------------------------- EndMatch");
         EndGame(None,"teamscorelimit");
         return;
     }
@@ -243,8 +236,9 @@ function EndRound(ERER_Reason RoundEndReason, Pawn Instigator, String Reason)
 
 
 /* CheckScore()
-see if this score means the game ends
-*/
+ *
+ * See if this score means the game/round ends
+ */
 function CheckScore(PlayerReplicationInfo Scorer)
 {
     local Pawn InsitigatedBy;
@@ -335,6 +329,43 @@ function bool CheckMaxLives(PlayerReplicationInfo Scorer)
  * .. ignore default Reset. We handle that.
  */
 function Reset() { }
+
+
+/**
+ * RestartPlayer()
+ *
+ * This differs from the "ELTTeamGame" version,
+ * by only respawning if there is no round in progress.
+ *
+ * Without this bit, MaxLives=1 was rendered ineffective.
+ */
+function RestartPlayer(Controller C)
+{
+    local Controller Attacker;
+    Attacker = GetCurrentAttacker();
+
+    if ( IsAttackingTeam ( C.GetTeamNum() ) ) {
+        if ( C != Attacker ) {
+            C.PlayerReplicationInfo.NumLives = 0;
+            C.PlayerReplicationInfo.bOutOfLives = true;
+        }
+    } else if ( !bRoundInProgress ) {
+        C.PlayerReplicationInfo.NumLives = 1;
+        C.PlayerReplicationInfo.bOutOfLives = false;
+    }
+
+    // focus "OUT" attacking-team player on "ACTIVE" attacker
+    if ( C.PlayerReplicationInfo.bOutOfLives )
+    {
+        if ( PlayerController(C) != None && Attacker != None
+          && (C.GetTeamNum() == Attacker.GetTeamNum()) ) // if on same team
+        {
+            PlayerController(C).ClientSetViewTarget( Attacker.Pawn );
+        }
+    }
+
+    Super(TeamGame).RestartPlayer(C); // skip ELTTeamGame, use standard TeamGame
+}
 
 /**
  * RestartAllPlayers()

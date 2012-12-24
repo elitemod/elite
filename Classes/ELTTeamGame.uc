@@ -29,7 +29,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 7:47:25 PM$
+ * @version $wotgreal_dt: 24/12/2012 9:00:18 PM$
  */
 class ELTTeamGame extends xTeamGame
     config;
@@ -40,6 +40,7 @@ var int AttackingPlayerNum;
 
 var config  string AttackerWeapon, DefenderWeapon;
 var config  int AttackerHealth, DefenderHealth;
+var config  int AttackerDamage, DefenderDamage;
 
 // ============================================================================
 // Implementation
@@ -113,14 +114,14 @@ event PostBeginPlay()
 function StartMatch()
 {
     super.StartMatch();
-    Log("---------------------------------------------- StartMatch: GAME");
+
     SelectNextAttacker();
 }
 
 /**
  * ScoreKill()
  *
- *
+ * this is the TDM version of Elite, so if attacker is dead, just spawn the next in line.
  */
 function ScoreKill(Controller Killer, Controller Other)
 {
@@ -136,7 +137,7 @@ function ScoreKill(Controller Killer, Controller Other)
 /**
  * CriticalPlayer()
  *
- * Returns true if Other is the current Attacker (= critical)
+ * Returns true if passed Controller is the current Attacker (= critical)
  */
 function bool CriticalPlayer(Controller Other)
 {
@@ -151,16 +152,34 @@ function bool CriticalPlayer(Controller Other)
  */
 function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector HitLocation, out vector Momentum, class<DamageType> DamageType )
 {
+    local int DistanceInMeters;
+    local PlayerReplicationInfo InstigatedPRI;
+
+    // as usual
     Damage = super.ReduceDamage(Damage,Injured,InstigatedBy,HitLocation,Momentum,DamageType);
 
+    // attacker damage
     if (ClassIsChildOf(DamageType, class'DamTypeSniperShot')
       || ClassIsChildOf(DamageType, class'DamTypeSniperHeadShot')
       || ClassIsChildOf(DamageType, class'DamTypeShockBeam'))
     {
-        if (Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum())
-            Damage = 1;
+        if (Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum()) {
+            Damage = AttackerDamage;
+
+            InstigatedPRI = InstigatedBy.Controller.PlayerReplicationInfo;
+
+            // announce distance to player
+            if ( PlayerController(InstigatedBy.Controller) != None ) {
+                DistanceInMeters = int(VSize(Hitlocation-InstigatedBy.Location)*0.01875.f);
+                PlayerController(InstigatedBy.Controller).ReceiveLocalizedMessage(class'EliteMod.ELTMessageDistance', DistanceInMeters, InstigatedPRI);
+            }
+        } else {
+            Damage = 0;
+        }
     }
-    else if (ClassIsChildOf(DamageType, class'DamTypeRocket')) {
+    // defender damage
+    else if (ClassIsChildOf(DamageType, class'DamTypeRocket'))
+    {
         if ( InstigatedBy == None || Injured == None ) {
             Damage = 0;
         }
@@ -171,9 +190,10 @@ function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector H
         }
         else if (Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum()) {
             // rocket damage
-            Damage = 1;
+            Damage = DefenderDamage;
         }
     }
+    // disable default engine damage
     else if (ClassIsChildOf(DamageType, class'Crushed')) {
         if ( Damage < 10 ) // jump on head?
             Damage = 0;
@@ -485,9 +505,13 @@ DefaultProperties
 
     // config options
     AttackerWeapon="EliteMod.ELTLightning"
-    DefenderWeapon="EliteMod.ELTRocketLauncher"
+    AttackerDamage=1
     AttackerHealth=4
+
+    DefenderWeapon="EliteMod.ELTRocketLauncher"
+    DefenderDamage=1
     DefenderHealth=1
+
 
     // classes
     PlayerControllerClassName="EliteMod.ELTPlayer"

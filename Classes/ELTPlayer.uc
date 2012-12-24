@@ -20,9 +20,24 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 5:04:47 PM$
+ * @version $wotgreal_dt: 24/12/2012 8:30:52 PM$
  */
 class ELTPlayer extends xPlayer;
+
+/**
+ * Suicide()
+ * End round if the Player is the current attacker.
+ */
+exec function Suicide() {
+    super.Suicide();
+
+    if ( ELTGame(Level.Game) == None )
+        return;
+
+    if ( ELTGame(Level.Game).GetCurrentAttacker() == self ) {
+        ELTGame(Level.Game).EndRound(ERER_AttackerDead, Pawn, "attacker_suicided");
+    }
+}
 
 // ============================================================================
 // Defaults
