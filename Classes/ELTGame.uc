@@ -19,50 +19,54 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 2:13:39 AM$
+ * @version $wotgreal_dt: 24/12/2012 4:08:53 PM$
  */
 class ELTGame extends ELTRoundGame
     config;
 
-function MakeObjectiveControllable()
-{
-    local GameObjective GO;
+var int GoalActivationTime;
 
-    for ( GO=Teams[0].AI.Objectives; GO!=None; GO=GO.NextObjective ) {
-        ELTObjective(GO).MakeControllable( CurrentAttackingTeam );
-    }
-}
-
-// Parse options for this game...
-event InitGame( string Options, out string Error )
+/**
+ * ReplicateUpdatedGameInfo()
+ * Assign all current game related info to our GRI
+ */
+function ReplicateUpdatedGameInfo()
 {
-    super.InitGame( Options, Error );
+    super.ReplicateUpdatedGameInfo();
+
+    ELTGameReplication(GameReplicationInfo).GoalActivationTime = GoalActivationTime;
 }
 
 
 /**
- * PostBeginPlay()
- * load our game rules.
+ * CanDisableObjective()
+ *
+ * Is objective allowed to be disabled ?
  */
-event PostBeginPlay()
+function bool CanDisableObjective( GameObjective GO )
 {
-    local GameRules EliteRules;
+    if ( !bRoundInProgress )
+        return false;
 
-    super.PostBeginPlay();
+    if ( GO.bBotOnlyObjective )
+        return true;
 
-    // Load and add rules
-    EliteRules = Spawn(class'EliteMod.ELTGameRules');
-    if ( Level.Game.GameRulesModifiers == None ) {
-        Level.Game.GameRulesModifiers = EliteRules;
-    } else {
-        Level.Game.GameRulesModifiers.AddGameRules(EliteRules);
-    }
+    if ( ELTObjective(GO) == None )
+        return false;
+
+    return ELTObjective(GO).bControllable;
 }
 
-
-function bool IsPlaying()
+/**
+ * ObjectiveDisabled()
+ *
+ * I think this is an event?
+ */
+function ObjectiveDisabled( GameObjective DisabledObjective )
 {
-    return false;
+    Log("Objective Disabled! -"@DisabledObjective);
+
+    super.ObjectiveDisabled( DisabledObjective );
 }
 
 /**
@@ -72,108 +76,20 @@ state MatchInProgress
 {
     function Timer()
     {
+        local GameObjective GO;
         super.Timer();
 
-        // If TimeLimit is disabled, keep timing (but ignore TimeLimit criteria to end game)
-        if ( TimeLimit < 1 )
+        if ( bRoundInProgess )
         {
-            GameReplicationInfo.bStopCountDown = false;
-            RemainingTime--;
-        }
-
-        GameReplicationInfo.RemainingTime = RemainingTime;
-
-        if ( RemainingTime % 60 == 0 ) {
-            // Force all players to re-synch time every 10 seconds
-            GameReplicationInfo.RemainingMinute = RemainingTime;
-        }
-
-        Log("Elapsed:"@CalculateElapsedTime()@", Remaining:"@RemainingTime);
-
-        if ( ResetCountDown > 0 )
-        {
-            ResetCountDown--;
-
-            if ( (ResetCountDown > 0) && (ResetCountDown <= 5) )
-                BroadcastLocalizedMessage(class'TimerMessage', ResetCountDown);
-            else if ( ResetCountDown == 0 )
-                StartNewRound();
-        }
-        else
-        {
-            // check if it's time to activate the pole
-            if ( CalculateElapsedTime() == GoalActivationTime ) {
-                MakeObjectiveControllable();
-            }
-
-            // check if the round time limit has been hit
-            if ( CalculateElapsedTime() >= ELTGameReplication(GameReplicationInfo).RoundTimeLimit )
+            if ( ElapsedTime == GoalActivationTime )
             {
-                EndRound(ERER_RoundTime, None, "roundtimelimit");
+                Log("> GoalActivationTime!");
+                for ( GO=Teams[0].AI.Objectives; GO!=None; GO=GO.NextObjective )
+                    if ( ELTObjective(GO) != None )
+                        ELTObjective(GO).MakeControllable( CurrentAttackingTeam );
             }
         }
     }
-
-    function bool IsPlaying()
-    {
-        return ELTGameReplication(GameReplicationInfo).RoundWinner == ERW_None && ResetCountDown == 0;
-    }
-}
-
-
-/**
- * Match is pending
- */
-auto State PendingMatch
-{
-    function EndRound(ERER_Reason RoundEndReason, Pawn Instigator, String Reason);
-
-Begin:
-    if ( bQuickStart )
-        StartMatch();
-}
-
-/**
- * Match is over
- */
-State MatchOver
-{
-    function EndRound(ERER_Reason RoundEndReason, Pawn Instigator, String Reason) {}
-}
-
-/**
- * AnnounceScore()
- */
-function AnnounceScore( int ScoringTeam )
-{
-    local name ScoreSound;
-
-    if ( ScoringTeam == ELTGameReplication(GameReplicationInfo).CurrentAttackingTeam )
-    {
-        if ( ScoringTeam == 1 )
-            ELTGameReplication(GameReplicationInfo).RoundWinner = ERW_BlueAttacked;
-        else
-            ELTGameReplication(GameReplicationInfo).RoundWinner = ERW_RedAttacked;
-
-        ScoreSound = AttackerWinRound[ScoringTeam];
-    }
-    else
-    {
-        if ( ScoringTeam == 1 )
-            ELTGameReplication(GameReplicationInfo).RoundWinner = ERW_BlueDefended;
-        else
-            ELTGameReplication(GameReplicationInfo).RoundWinner = ERW_RedDefended;
-
-        ScoreSound = DefenderWinRound[ScoringTeam];
-    }
-
-    /*
-    // team just won, not necessarly because the were defending or attacking.
-    if ( !bWasRoleScore ) {
-        ScoreSound = TeamWinRound[ScoringTeam];
-    }*/
-
-    QueueAnnouncerSound(ScoreSound, 1, 255);
 }
 
 DefaultProperties
@@ -181,8 +97,6 @@ DefaultProperties
     Acronym="ELT"
     GameName="Elite Game"
 
-    MaxLives=1
-    GoalScore=0
-
     MinNetPlayers=2
+    GoalActivationTime=15
 }

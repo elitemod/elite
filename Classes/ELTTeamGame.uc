@@ -19,7 +19,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 4:51:20 AM$
+ * @version $wotgreal_dt: 24/12/2012 3:21:11 PM$
  */
 class ELTTeamGame extends xTeamGame;
 
@@ -209,14 +209,6 @@ see if this score means the game ends
 */
 function CheckScore(PlayerReplicationInfo Scorer)
 {
-    Log("---------------------------------------------- CheckScore: GAME");
-    Log("  - CurrentAttackingTeam:"@CurrentAttackingTeam);
-    Log("  - Current Attacker:"@GetAttackerName());
-
-    if ( (Scorer != None) && (Scorer.Team != None) ) {
-        Log("  - Player:"@Scorer.GetHumanReadableName()@"- Team:"@Scorer.Team.TeamIndex);
-    }
-
     if ( (Scorer != None) && bOverTime )
         EndGame(Scorer,"timelimit");
 }
@@ -290,10 +282,9 @@ function Controller GetCurrentAttacker()
     local ELTPlayerTeam AttackingTeam;
 
     AttackingTeam = ELTPlayerTeam(Teams[CurrentAttackingTeam]);
-    if ( AttackingTeam == None ) {
-        warn("AttackingTeam is none:"@Teams[CurrentAttackingTeam]);
+
+    if ( AttackingTeam == None )
         return None;
-    }
 
     return AttackingTeam.Players[AttackingPlayerNum];
 }
@@ -305,6 +296,7 @@ function Controller GetCurrentAttacker()
 function string GetAttackerName()
 {
     local Controller Attacker;
+
     Attacker = GetCurrentAttacker();
 
     if ( Attacker == None )

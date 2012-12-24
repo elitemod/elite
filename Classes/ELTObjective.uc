@@ -20,6 +20,8 @@ function MakeControllable(byte CurrentAttackingTeam)
 
     // sync
     NetUpdateTime = Level.TimeSeconds - 1;
+
+    HighlightPhysicalObjective( true );
 }
 
 simulated function Reset()

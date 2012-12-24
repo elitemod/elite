@@ -19,13 +19,12 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 5:43:19 AM$
+ * @version $wotgreal_dt: 24/12/2012 4:06:21 PM$
  */
 class ELTRoundGame extends ELTTeamGame;
 
 var int CurrentRound;
 var int RoundTimeLimit;
-var int GoalActivationTime;
 var bool bRoundInProgress;
 
 enum ERER_Reason
@@ -52,11 +51,10 @@ event InitGame(string Options, out string Error)
 {
     Super.InitGame(Options, Error);
 
-    bRoundInProgress = false;
-
-    CurrentRound  = 1;
-    TimeLimit     = 0;
-    RemainingTime = CalculateRoundTime();
+    bRoundInProgress = true;
+    TimeLimit = 0;
+    CurrentRound = 1;
+    RemainingTime = NumRounds * RoundTimeLimit;
 
     if ( GameReplicationInfo != None )
         GameReplicationInfo.RemainingTime = RemainingTime;
@@ -91,11 +89,8 @@ function ReplicateUpdatedGameInfo()
     ELTGameReplication(GameReplicationInfo).RoundTimeLimit = RoundTimeLimit;
     ELTGameReplication(GameReplicationInfo).GoalActivationTime = GoalActivationTime;
 
-    // remaining
-    ELTGameReplication(GameReplicationInfo).RemainingTime = RemainingTime;
-
-    // resync
-    ELTGameReplication(GameReplicationInfo).RemainingMinute = RemainingTime;
+    // sync
+    ELTGameReplication(GameReplicationInfo).ElapsedTime = ElapsedTime;
     ELTGameReplication(GameReplicationInfo).NetUpdateTime = Level.TimeSeconds - 1;
 }
 
@@ -107,7 +102,7 @@ function StartMatch()
 {
     super.StartMatch();
 
-    bRoundInProgress = true;
+    Log("---------------------------------------------- StartMatch: ("$CurrentRound$"/"$NumRounds$")");
 }
 
 /**
@@ -116,6 +111,8 @@ function StartMatch()
 function StartNewRound()
 {
     CurrentRound++;
+
+    Log("---------------------------------------------- New Round: ("$CurrentRound$"/"$NumRounds$")");
 
     // Set Attacking and Defending teams
     if ( CurrentRound % 2 == 1 ) {
@@ -127,22 +124,19 @@ function StartNewRound()
     SelectNextAttacker();
 
     bRoundInProgress = true;
-
-    // Determine Attacker for this round
-    Log("---------------------------------------------- BeginRound: GAME");
-
-    // Reset Remaining Time
-    RemainingTime = CalculateRoundTime();
-
-    // Update the GameReplicationInfo
+    ElapsedTime = 0;
     ReplicateUpdatedGameInfo();
-
     ResetLevel();
-
     RestartAllPlayers();
 
+    TriggerEvent('RoundStarted', Self, None);
 
     SetGameSpeed( GameSpeed );
+}
+
+event RoundStarted()
+{
+    Log("## round started ! ##");
 }
 
 /**
@@ -152,15 +146,19 @@ function StartNewRound()
 function EndRound(ERER_Reason RoundEndReason, Pawn Instigator, String Reason)
 {
     local Controller C;
+    local PlayerReplicationInfo PRI;
     local int ScoringTeam;
 
     if ( !bRoundInProgress )
         return;
 
-    Log("---------------------------------------------- EndRound: GAME");
-    Log("  Reason: "@Reason);
-
+    // flag round as ended
     bRoundInProgress = false;
+
+    // get PRI if intstigator is known
+    if ( (Instigator != None) && (Instigator.Controller != None) ) {
+        PRI = Instigator.Controller.PlayerReplicationInfo;
+    }
 
     // fix player state
     for ( C=Level.ControllerList; C!=None; C=C.NextController ) {
@@ -177,17 +175,12 @@ function EndRound(ERER_Reason RoundEndReason, Pawn Instigator, String Reason)
     else if ( RoundEndReason == ERER_DefendersDead )
     {
         ScoringTeam = CurrentAttackingTeam;
-
-        if (Reason == "defenders_killz") {
-            Level.Game.Broadcast(Self, "[RoundEnded]" @ GetAttackerName() @ "won because all defenders are dead." );
-        } else {
-            Level.Game.Broadcast(Self, "[RoundEnded]" @ GetAttackerName() @ "won by eliminating all defenders." );
-        }
+        Level.Game.Broadcast(Self, "[RoundEnded]" @ GetAttackerName() @ "won because all defenders are dead." );
     }
     else if ( RoundEndReason == ERER_AttackerDead )
     {
         ScoringTeam = 1 - CurrentAttackingTeam;
-        Level.Game.Broadcast(Self, "[RoundEnded]" @ GetAttackerName() @ "is dead."@ Teams[ScoringTeam].GetHumanReadableName() @"wins the round.");
+        Level.Game.Broadcast(Self, "[RoundEnded]" @ GetAttackerName() @ "died."@ Teams[ScoringTeam].GetHumanReadableName() @"wins the round.");
     }
     else if ( RoundEndReason == ERER_RoundTime )
     {
@@ -196,18 +189,38 @@ function EndRound(ERER_Reason RoundEndReason, Pawn Instigator, String Reason)
     }
     else if ( RoundEndReason != ERER_NoOneLeft )
     {
+        ScoringTeam = 1 - CurrentAttackingTeam;
         Level.Game.Broadcast(Self, "[RoundEnded] No one is left to win the round.");
     }
 
-    // Increase Team Score for this round
+    // Increase Team Score
     // =========================================================
     Teams[ScoringTeam].Score += 1.0;
     Teams[ScoringTeam].NetUpdateTime = Level.TimeSeconds - 1;
-
-    // Announce round winner, replicate and restart
-    // =========================================================
+    TeamScoreEvent(ScoringTeam, 1, "endround_scoring_team");
     AnnounceScore(ScoringTeam);
+
+    // =========================================================
     ReplicateUpdatedGameInfo();
+
+    Log("---------------------------------------------- EndRound");
+    Log("  EndRound Reason: "@Reason);
+
+    if ( Instigator != None )
+        Log("  Scoring Instigator: "@Instigator.GetHumanReadableName()$", Team:"@Instigator.GetTeamNum());
+
+    Log("  Scoring Team Index: "@ScoringTeam);
+    Log("  Scoring IsAttackingTeam: "@IsAttackingTeam(ScoringTeam));
+    Log("  Scoring Team Score: "@GameReplicationInfo.Teams[ScoringTeam].Score );
+
+    // check if match is over
+    // =========================================================
+    if ( CurrentRound == NumRounds ) {
+        Log("---------------------------------------------- EndMatch");
+        EndGame(None,"teamscorelimit");
+        return;
+    }
+
     QueueAnnouncerSound(NewRoundSound, 1, 255);
     ResetCountDown = ResetTimeDelay + 4;
 }
@@ -218,19 +231,65 @@ see if this score means the game ends
 */
 function CheckScore(PlayerReplicationInfo Scorer)
 {
-    local bool bDefendersDead, bAttackersDead;
-    Super.CheckScore( Scorer );
+    local Pawn InsitigatedBy;
+    local Controller C, NextC;
 
-    bAttackersDead = !ELTPlayerTeam(Teams[CurrentAttackingTeam]).HasOneAlive();
-    bDefendersDead = !ELTPlayerTeam(Teams[1-CurrentAttackingTeam]).HasOneAlive();
+    if ( !bRoundInProgress )
+        return;
 
-    if ( bDefendersDead )
-        EndRound(ERER_DefendersDead,None,"attacker_killed_all");
-    else if ( bAttackersDead )
-        EndRound(ERER_AttackerDead,None,"defenders_killed_attacker");
-    else
-        Log("# KEEP GOING ...");
+    // find pawn by PRI
+    if ( Scorer != None ) {
+        C = Level.ControllerList;
+        while ( C != None  ) {
+            NextC = C.NextController;
+            if ( C.PlayerReplicationInfo != None && C.PlayerReplicationInfo == Scorer )  {
+                InsitigatedBy = C.Pawn;
+                break;
+            }
+            C = NextC;
+        }
+    }
+
+    // check living players
+    if ( !ELTPlayerTeam(Teams[1-CurrentAttackingTeam]).HasOneAlive() )
+    {
+        Log("CheckScore ... bDefendersDead!");
+        EndRound(ERER_DefendersDead,InsitigatedBy,"attacker_killed_all");
+    }
+    else if ( !ELTPlayerTeam(Teams[CurrentAttackingTeam]).HasOneAlive() )
+    {
+        Log("CheckScore ... bAttackersDead!");
+        EndRound(ERER_AttackerDead,InsitigatedBy,"defenders_killed_attacker");
+    }
 }
+
+
+function AnnounceScore( int ScoringTeam )
+{
+    local name ScoreSound;
+
+    if ( IsAttackingTeam( ScoringTeam ) )
+    {
+        if ( ScoringTeam == 1 )
+            ELTGameReplication(GameReplicationInfo).RoundWinner = ERW_BlueAttacked;
+        else
+            ELTGameReplication(GameReplicationInfo).RoundWinner = ERW_RedAttacked;
+
+        ScoreSound = AttackerWinRound[ScoringTeam];
+    }
+    else
+    {
+        if ( ScoringTeam == 1 )
+            ELTGameReplication(GameReplicationInfo).RoundWinner = ERW_BlueDefended;
+        else
+            ELTGameReplication(GameReplicationInfo).RoundWinner = ERW_RedDefended;
+
+        ScoreSound = DefenderWinRound[ScoringTeam];
+    }
+
+    QueueAnnouncerSound( ScoreSound, 1, 255 );
+}
+
 
 /**
  * ScoreKill()
@@ -255,7 +314,7 @@ function bool CheckMaxLives(PlayerReplicationInfo Scorer)
 
 /**
  * Reset()
- * .. ignore default Reset. We handle that ourselves.
+ * .. ignore default Reset. We handle that.
  */
 function Reset() { }
 
@@ -289,6 +348,11 @@ function ResetLevel()
     local Controller C, NextC;
     local GameObjective GO;
 
+    Log("ResetLevel");
+
+    // Force bTeamScoreRounds to avoid having TeamScores reset to 0
+    bTeamScoreRounds = true;
+
     // Reset ALL controllers first
     C = Level.ControllerList;
     while ( C != none ) {
@@ -313,40 +377,23 @@ function ResetLevel()
     }
 }
 
-
-/**
- * CalculateRoundTime()
- * Sum of configured round time and reset time and 1 second delay margin.
- */
-function int CalculateElapsedTime()
-{
-    return (CalculateRoundTime() - RemainingTime);
-}
-
 /**
  * CalculateRoundTime()
  * Sum of configured round time and reset time and 1 second delay margin.
  */
 function int CalculateRoundTime()
 {
-    if ( CurrentRound == 0 ) {
-        return RoundTimeLimit + 1;
-    }
-    return (RoundTimeLimit + ResetTimeDelay) + 1;
+    return RoundTimeLimit + 1;
 }
 
 /**
- * MakeObjectiveControllable()
+ * GetRoundString()
  *
- * Go through all ELTObjective in the map and call "MakeControllable"
+ * Tiny text helper that shows something like "(1/6)" depening on NumRounds and CurrentRound
  */
-function MakeObjectiveControllable()
+function string GetRoundString()
 {
-    local GameObjective GO;
-
-    for ( GO=Teams[0].AI.Objectives; GO!=None; GO=GO.NextObjective ) {
-        ELTObjective(GO).MakeControllable( CurrentAttackingTeam );
-    }
+    return "("$CurrentRound$"/"$NumRounds$")";
 }
 
 /**
@@ -358,25 +405,17 @@ state MatchInProgress
     {
         super.Timer();
 
-        // If TimeLimit is disabled, keep timing (but ignore TimeLimit criteria to end game)
-        if ( TimeLimit < 1 )
-        {
-            GameReplicationInfo.bStopCountDown = false;
-            RemainingTime--;
+        if ( ElapsedTime % 10 == 0 ) { // Force all players to re-synch time every 10 seconds
+            Log("Re-synching...");
+            GameReplicationInfo.ElapsedTime = ElapsedTime;
         }
-
-        GameReplicationInfo.RemainingTime = RemainingTime;
-
-        if ( RemainingTime % 60 == 0 ) {
-            // Force all players to re-synch time every 10 seconds
-            GameReplicationInfo.RemainingMinute = RemainingTime;
-        }
-
-        Log("Elapsed:"@CalculateElapsedTime()@", Remaining:"@RemainingTime@", Limit:"@ELTGameReplication(GameReplicationInfo).RoundTimeLimit);
 
         if ( ResetCountDown > 0 )
         {
             ResetCountDown--;
+
+            Log("Reset in:"@ResetCountDown@" - Red:"@GameReplicationInfo.Teams[0].Score@"Blue:"@GameReplicationInfo.Teams[1].Score);
+
 
             if ( (ResetCountDown > 0) && (ResetCountDown <= 5) )
                 BroadcastLocalizedMessage(class'TimerMessage', ResetCountDown);
@@ -385,23 +424,15 @@ state MatchInProgress
         }
         else
         {
-            // check if it's time to activate the pole
-            if ( CalculateElapsedTime() == GoalActivationTime )
-            {
-                MakeObjectiveControllable();
-            }
+            Log("Elapsed:"@ElapsedTime@" - Red:"@GameReplicationInfo.Teams[0].Score@"Blue:"@GameReplicationInfo.Teams[1].Score);
 
-            // check if the round time limit has been hit
-            if ( CalculateElapsedTime() >= ELTGameReplication(GameReplicationInfo).RoundTimeLimit )
+            if ( ElapsedTime >= ELTGameReplication(GameReplicationInfo).RoundTimeLimit )
             {
+                Log("> RoundTimeLimit!");
+                // round time limit has been hit
                 EndRound(ERER_RoundTime, None, "roundtimelimit");
             }
         }
-    }
-
-    function bool IsPlaying()
-    {
-        return ELTGameReplication(GameReplicationInfo).RoundWinner == ERW_None && ResetCountDown == 0;
     }
 }
 
@@ -409,11 +440,11 @@ DefaultProperties
 {
     Acronym="ELT"
     GameName="Elite Roundbased Game"
+    bTeamScoreRounds=false
 
     RoundTimeLimit=60
     ResetTimeDelay=5
     NumRounds=6
-
 
     // sounds
     DrawGameSound=Draw_Game
