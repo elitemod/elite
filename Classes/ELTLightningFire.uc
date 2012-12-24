@@ -19,8 +19,8 @@
  *
  * @author m3nt0r
  * @package Elite
- * @package Weapons
- * @version $wotgreal_dt: 24/12/2012 7:23:31 PM$
+ * @subpackage Weapons
+ * @version $wotgreal_dt: 24/12/2012 8:08:19 PM$
  */
 class ELTLightningFire extends SniperFire;
 
@@ -30,9 +30,9 @@ var float AmmoRegenTime;
 // Implementation
 // ============================================================================
 
-function PlayFireEnd()
+simulated function PostBeginPlay()
 {
-    super.PlayFireEnd();
+    Super.PostBeginPlay();
     SetTimer(AmmoRegenTime / 10, true);
 }
 
@@ -40,8 +40,6 @@ function Timer()
 {
     if ( !Weapon.AmmoMaxed(0) )
         Weapon.AddAmmo(1,0);
-    else
-        SetTimer(0, false);
 }
 
 // ============================================================================
@@ -50,7 +48,7 @@ function Timer()
 
 defaultproperties
 {
+    AmmoPerFire=99
     AmmoRegenTime=0.3
     AmmoClass=class'EliteMod.ELTLightningAmmo'
-    AmmoPerFire=99
 }

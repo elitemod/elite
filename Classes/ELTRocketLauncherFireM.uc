@@ -20,29 +20,15 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 5:05:35 PM$
+ * @version $wotgreal_dt: 24/12/2012 8:07:47 PM$
  */
 class ELTRocketLauncherFireM extends RocketMultiFire;
-
-var float AmmoRegenTime;
 
 // ============================================================================
 // Implementation
 // ============================================================================
 
-function PlayFiring()
-{
-    Super.PlayFiring();
-    SetTimer(AmmoRegenTime, true);
-}
-
-function Timer()
-{
-    if ( !Weapon.AmmoMaxed(0) )
-        Weapon.AddAmmo(1,0);
-    else
-        SetTimer(0, false);
-}
+    // NOTE: we do not need another ammo regen here, because ammo is shared.
 
 function Projectile SpawnProjectile(Vector Start, Rotator Dir)
 {
@@ -55,6 +41,5 @@ function Projectile SpawnProjectile(Vector Start, Rotator Dir)
 
 DefaultProperties
 {
-    AmmoRegenTime=0.8
     AmmoClass=class'EliteMod.ELTRocketLauncherAmmo'
 }

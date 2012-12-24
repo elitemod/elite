@@ -40,10 +40,9 @@ simulated function PostBeginPlay()
 
 DefaultProperties
 {
-    speed=2600.0
-    MaxSpeed=2600.0
+    speed=2800.0
+    MaxSpeed=2800.0
     Damage=1.0
     DamageRadius=220.0
     MomentumTransfer=50000
-    MyDamageType=class'DamTypeRocket'
 }

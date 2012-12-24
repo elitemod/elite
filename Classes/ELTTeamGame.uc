@@ -29,7 +29,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 7:33:43 PM$
+ * @version $wotgreal_dt: 24/12/2012 7:47:25 PM$
  */
 class ELTTeamGame extends xTeamGame
     config;
@@ -153,17 +153,12 @@ function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector H
 {
     Damage = super.ReduceDamage(Damage,Injured,InstigatedBy,HitLocation,Momentum,DamageType);
 
-    if (ClassIsChildOf(DamageType, class'Crushed')) {
-        if ( Damage < 10 ) // jump on head?
-            Damage = 0;
-    }
-    if (ClassIsChildOf(DamageType, class'Fell')) {
-        // falling damage
-        Damage = 0;
-    }
-    else if (ClassIsChildOf(DamageType, class'DamTypeShockBeam')) {
-        // rilfe damage
-        Damage = 1;
+    if (ClassIsChildOf(DamageType, class'DamTypeSniperShot')
+      || ClassIsChildOf(DamageType, class'DamTypeSniperHeadShot')
+      || ClassIsChildOf(DamageType, class'DamTypeShockBeam'))
+    {
+        if (Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum())
+            Damage = 1;
     }
     else if (ClassIsChildOf(DamageType, class'DamTypeRocket')) {
         if ( InstigatedBy == None || Injured == None ) {
@@ -178,6 +173,14 @@ function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector H
             // rocket damage
             Damage = 1;
         }
+    }
+    else if (ClassIsChildOf(DamageType, class'Crushed')) {
+        if ( Damage < 10 ) // jump on head?
+            Damage = 0;
+    }
+    else if (ClassIsChildOf(DamageType, class'Fell')) {
+        // falling damage
+        Damage = 0;
     }
 
     return Damage;

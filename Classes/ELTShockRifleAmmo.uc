@@ -25,9 +25,9 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 5:03:55 PM$
+ * @version $wotgreal_dt: 24/12/2012 7:59:42 PM$
  */
-class ELTShockRifleAmmo extends SuperShockAmmo;
+class ELTShockRifleAmmo extends ShockAmmo;
 
 // ============================================================================
 // Defaults

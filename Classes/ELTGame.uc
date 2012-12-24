@@ -22,13 +22,14 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 4:46:10 PM$
+ * @version $wotgreal_dt: 24/12/2012 7:38:16 PM$
  */
 class ELTGame extends ELTRoundGame
     config;
 
 var int GoalActivationTime; // if you set this to 5 the objective will
-                            // become controllable in the LAST 5 SECONDS of the current round.
+                            // become "controllable" in the LAST 5 SECONDS
+                            // of the current round. ya dig? :)
 
 
 // ============================================================================
@@ -46,6 +47,7 @@ function ReplicateUpdatedGameInfo()
 }
 
 /**
+ * Timer()
  * Match is in progress
  */
 state MatchInProgress
