@@ -26,12 +26,14 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 8:42:49 PM$
+ * @version $wotgreal_dt: 24/12/2012 10:19:56 PM$
  */
 class ELTRoundGame extends ELTTeamGame;
 
 var int CurrentRound;
 var int RoundTimeLimit;
+var int RoundElapsedTime;
+
 var bool bRoundInProgress;
 
 enum ERER_Reason
@@ -63,10 +65,10 @@ event InitGame(string Options, out string Error)
     Super.InitGame(Options, Error);
 
     // Disable Time Limit.
-    TimeLimit = 0;
+    TimeLimit = (NumRounds * RoundTimeLimit) / 60;
 
     // Total remaining time is the amount of time needed for all rounds to run + delay
-    RemainingTime = (NumRounds * RoundTimeLimit) + EndTimeDelay;
+    RemainingTime = RoundTimeLimit + 1;
     if ( GameReplicationInfo != None )
         GameReplicationInfo.RemainingTime = RemainingTime;
 
@@ -106,7 +108,7 @@ function ReplicateUpdatedGameInfo()
     ELTGameReplication(GameReplicationInfo).RoundTimeLimit = RoundTimeLimit;
 
     // sync
-    ELTGameReplication(GameReplicationInfo).ElapsedTime = ElapsedTime;
+    ELTGameReplication(GameReplicationInfo).RoundElapsedTime = RoundElapsedTime;
     ELTGameReplication(GameReplicationInfo).NetUpdateTime = Level.TimeSeconds - 1;
 }
 
@@ -140,7 +142,7 @@ function StartNewRound()
     SelectNextAttacker();
 
     bRoundInProgress = true;
-    ElapsedTime = 0;
+    RoundElapsedTime = 0;
     ReplicateUpdatedGameInfo();
     ResetLevel();
     RestartAllPlayers();
@@ -434,6 +436,11 @@ function int CalculateRoundTime()
     return RoundTimeLimit + 1;
 }
 
+function int GetRemainingRoundTime()
+{
+    return (ELTGameReplication(GameReplicationInfo).RoundTimeLimit - RoundElapsedTime);
+}
+
 /**
  * GetRoundString()
  *
@@ -453,26 +460,75 @@ state MatchInProgress
     {
         super.Timer();
 
-        if ( ElapsedTime % 10 == 0 ) { // Force all players to re-synch time every 10 seconds
-            GameReplicationInfo.ElapsedTime = ElapsedTime;
+        RemainingTime = GetRemainingRoundTime();
+        if ( RoundElapsedTime % 10 == 0 )
+        { // Force all players to re-synch time every 10 seconds
+            ELTGameReplication(GameReplicationInfo).RemainingMinute = RemainingTime;
         }
 
         if ( ResetCountDown > 0 ) {
             ResetCountDown--;
+
+            if (ResetCountDown == 1) {
+                RoundElapsedTime = 0;
+                RemainingTime = CalculateRoundTime();
+                ELTGameReplication(GameReplicationInfo).RoundElapsedTime = RoundElapsedTime;
+                ELTGameReplication(GameReplicationInfo).RemainingTime = RemainingTime;
+            }
+
             if ( (ResetCountDown > 0) && (ResetCountDown <= 5) )
                 BroadcastLocalizedMessage(class'TimerMessage', ResetCountDown);
             else if ( ResetCountDown == 0 )
                 StartNewRound();
         }
-        else
+        else // match is running, in a reset countdown we "freeze" the time until StartNewRound.
         {
-            // round time limit
-            if ( ElapsedTime >= ELTGameReplication(GameReplicationInfo).RoundTimeLimit )
-                EndRound(ERER_RoundTime, None, "roundtimelimit");
+            RoundElapsedTime++;
         }
     }
 }
 
+
+function EndGame(PlayerReplicationInfo Winner, string Reason )
+{
+    if (Reason == "TimeLimit") {
+        EndRound(ERER_RoundTime, None, "roundtimelimit");
+        return;
+    }
+
+    Super.EndGame(Winner,Reason);
+}
+
+/**
+ * CheckEndGame()
+ *
+ * - Compare scores and declare winner in GameReplicationInfo
+ * - Set EndTime timestamp
+ */
+function bool CheckEndGame(PlayerReplicationInfo Winner, string Reason)
+{
+    local PlayerController PC;
+    local Controller C;
+
+    Log("-- Check EndGame:"@Winner@", Reason:"@Reason);
+
+    if ( Teams[1].Score > Teams[0].Score )
+        GameReplicationInfo.Winner = Teams[1];
+    else if ( Teams[1].Score < Teams[0].Score )
+        GameReplicationInfo.Winner = Teams[0];
+    else
+        GameReplicationInfo.Winner = None;
+
+    for ( C=Level.ControllerList; C!=None; C=C.nextController ) {
+        PC = PlayerController(C);
+        if ( PC != none && CurrentGameProfile != None ) {
+            CurrentGameProfile.bWonMatch = (PC.PlayerReplicationInfo.Team == GameReplicationInfo.Winner);
+        }
+    }
+
+    EndTime = Level.TimeSeconds + EndTimeDelay;
+    return true;
+}
 // ============================================================================
 // Defaults
 // ============================================================================
@@ -481,6 +537,8 @@ DefaultProperties
 {
     Acronym="ELT"
     GameName="Elite Roundbased Game"
+    HUDType="EliteMod.ELTRoundGameHUD"
+
     bTeamScoreRounds=false
 
     RoundTimeLimit=60

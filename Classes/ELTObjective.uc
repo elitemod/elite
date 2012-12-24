@@ -32,7 +32,7 @@
  * @author m3nt0r
  * @package Elite
  * @package Objective
- * @version $wotgreal_dt: 24/12/2012 4:50:11 PM$
+ * @version $wotgreal_dt: 24/12/2012 9:25:32 PM$
  */
 class ELTObjective extends ELTObjectiveBase;
 
@@ -42,6 +42,8 @@ class ELTObjective extends ELTObjectiveBase;
 
 function MakeControllable(byte CurrentAttackingTeam)
 {
+    Log("--- MakeControllable ---");
+
     // allow touch() to work
     bControllable = true;
     bActive = true;

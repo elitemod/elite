@@ -22,7 +22,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 7:38:16 PM$
+ * @version $wotgreal_dt: 24/12/2012 9:24:54 PM$
  */
 class ELTGame extends ELTRoundGame
     config;
@@ -58,7 +58,7 @@ state MatchInProgress
         Super.Timer();
 
         if ( bRoundInProgress )
-            if ( (ELTGameReplication(GameReplicationInfo).RoundTimeLimit - ElapsedTime) == GoalActivationTime )
+            if ( GetRemainingRoundTime() == GoalActivationTime )
                 for ( GO=Teams[0].AI.Objectives; GO!=None; GO=GO.NextObjective )
                     if ( ELTObjective(GO) != None )
                         ELTObjective(GO).MakeControllable( CurrentAttackingTeam );
