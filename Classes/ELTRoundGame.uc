@@ -19,7 +19,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 23/12/2012 6:41:50 PM$
+ * @version $wotgreal_dt: 24/12/2012 3:36:44 AM$
  */
 class ELTRoundGame extends ELTTeamGame;
 
@@ -146,7 +146,6 @@ function BeginRound()
     // Update the GameReplicationInfo
     ReplicateUpdatedGameInfo();
     ResetLevel();
-    RestartPlayers();
     SetGameSpeed( GameSpeed );
 }
 

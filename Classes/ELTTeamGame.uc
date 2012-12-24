@@ -19,7 +19,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 2:29:04 AM$
+ * @version $wotgreal_dt: 24/12/2012 4:51:20 AM$
  */
 class ELTTeamGame extends xTeamGame;
 
@@ -80,7 +80,6 @@ event PostBeginPlay()
     local GameObjective GO;
 
     super.PostBeginPlay();
-    Log("PostBeginPlay: GAME");
 
     // Caching PlayerSpawnManagers
     foreach AllActors(class'ELTPlayerSpawnManager', PSM)
@@ -93,6 +92,39 @@ event PostBeginPlay()
     }
 }
 
+function StartMatch()
+{
+    super.StartMatch();
+    Log("---------------------------------------------- StartMatch: GAME");
+    SelectNextAttacker();
+}
+
+/**
+ * ScoreKill()
+ *
+ *
+ */
+function ScoreKill(Controller Killer, Controller Other)
+{
+    super.ScoreKill(Killer, Other);
+
+    if ( CriticalPlayer(Other) )
+    {
+        SelectNextAttacker();
+        RestartAttacker();
+    }
+}
+
+/**
+ * CriticalPlayer()
+ *
+ * Returns true if Other is the current Attacker (= critical)
+ */
+function bool CriticalPlayer(Controller Other)
+{
+    return ((Other.PlayerReplicationInfo != None) && (Other == GetCurrentAttacker()));
+}
+
 /**
  * ReduceDamage()
  *
@@ -102,8 +134,6 @@ event PostBeginPlay()
 function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector HitLocation, out vector Momentum, class<DamageType> DamageType )
 {
     Damage = super.ReduceDamage(Damage,Injured,InstigatedBy,HitLocation,Momentum,DamageType);
-
-    Log("Damage:"@DamageType);
 
     if (ClassIsChildOf(DamageType, class'Crushed')) {
         if ( Damage < 10 ) // jump on head?
@@ -140,40 +170,66 @@ function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector H
  */
 function RestartPlayer(Controller C)
 {
-    local Controller Attacker;
-    Super.RestartPlayer(C);
-
-    if ( C == None )
-        return;
-
     if ( IsAttackingTeam ( C.GetTeamNum() ) ) {
-        Attacker = GetCurrentAttacker();
-        if ( Attacker == None ) {
-            Log("!! RestartPlayer - Attacker is none");
-            return;
-        }
-
-        if ( C != Attacker ) {
+        if ( C != GetCurrentAttacker() ) {
             C.PlayerReplicationInfo.NumLives = 0;
             C.PlayerReplicationInfo.bOutOfLives = true;
         }
+    } else {
+        C.PlayerReplicationInfo.NumLives = 1;
+        C.PlayerReplicationInfo.bOutOfLives = false;
     }
+
+    Super.RestartPlayer(C);
 }
 
-function RestartPlayers()
+/**
+ * RestartAttacker()
+ *
+ * Resurrect the current Attacker
+ */
+function bool RestartAttacker()
 {
-    local Controller C, NextC;
+    local Controller Attacker;
 
-    C = Level.ControllerList;
-    while ( C != none ) {
-        NextC = C.NextController;
-        if ( C.PlayerReplicationInfo == None || !C.PlayerReplicationInfo.bOnlySpectator ) {
-            RestartPlayer(C);
-        }
-        C = NextC;
+    Attacker = GetCurrentAttacker();
+    if ( (Attacker != None) && (Attacker.PlayerReplicationInfo != None) ) {
+        Attacker.PlayerReplicationInfo.NumLives = 1;
+        Attacker.PlayerReplicationInfo.bOutOfLives = false;
+        RestartPlayer( Attacker );
+        return true;
     }
+
+    return false;
 }
 
+
+/* CheckScore()
+see if this score means the game ends
+*/
+function CheckScore(PlayerReplicationInfo Scorer)
+{
+    Log("---------------------------------------------- CheckScore: GAME");
+    Log("  - CurrentAttackingTeam:"@CurrentAttackingTeam);
+    Log("  - Current Attacker:"@GetAttackerName());
+
+    if ( (Scorer != None) && (Scorer.Team != None) ) {
+        Log("  - Player:"@Scorer.GetHumanReadableName()@"- Team:"@Scorer.Team.TeamIndex);
+    }
+
+    if ( (Scorer != None) && bOverTime )
+        EndGame(Scorer,"timelimit");
+}
+
+/**
+ * IsAttackingTeam()
+ *
+ * Check if given TeamNumber is currently attacking
+ */
+function bool IsAttackingTeam(int TeamNumber)
+{
+    return ( TeamNumber == CurrentAttackingTeam );
+}
 
 /**
  * AddGameSpecificInventory()
@@ -213,18 +269,16 @@ function SelectNextAttacker()
 {
     local ELTPlayerTeam AttackingTeam;
 
-    if ( Teams[CurrentAttackingTeam] == None ) {
-        warn("SelectNextAttacker() - Teams is weird");
-        return;
-    }
-
     AttackingTeam = ELTPlayerTeam(Teams[CurrentAttackingTeam]);
-
-    if ( AttackingTeam == None ) {
-        warn("SelectNextAttacker() - AttackingTeam is none:"@Teams[CurrentAttackingTeam]);
-        return;
-    }
     AttackingPlayerNum = AttackingTeam.GetNextAttacker();
+
+    // replicate
+    ELTGameReplication(GameReplicationInfo).AttackingPlayerNum = AttackingPlayerNum;
+    ELTGameReplication(GameReplicationInfo).NetUpdateTime = Level.TimeSeconds - 1;
+
+    // tell others
+    Level.Game.Broadcast(self, GetAttackerName()@"is attacking.");
+    Log("### > "@GetAttackerName()@"is attacking.");
 }
 
 /**
@@ -235,17 +289,12 @@ function Controller GetCurrentAttacker()
 {
     local ELTPlayerTeam AttackingTeam;
 
-   if ( Teams[CurrentAttackingTeam] == None ) {
-        warn("GetCurrentAttacker() - Teams is weird");
-        return None;
-    }
-
     AttackingTeam = ELTPlayerTeam(Teams[CurrentAttackingTeam]);
-
     if ( AttackingTeam == None ) {
-        warn("GetCurrentAttacker() - AttackingTeam is none:"@Teams[CurrentAttackingTeam]);
+        warn("AttackingTeam is none:"@Teams[CurrentAttackingTeam]);
         return None;
     }
+
     return AttackingTeam.Players[AttackingPlayerNum];
 }
 
@@ -267,6 +316,16 @@ function string GetAttackerName()
     return Attacker.PlayerReplicationInfo.GetHumanReadableName();
 }
 
+/**
+ * GetDefenderNum()
+ *
+ * Native function from GameInfo.
+ * Properly return our defending teamindex
+ */
+function int GetDefenderNum()
+{
+    return (1 - CurrentAttackingTeam);
+}
 
 /**
  * QueueAnnouncerSound()
@@ -282,13 +341,6 @@ function QueueAnnouncerSound(name ASound, byte AnnouncementLevel, byte Team, opt
         }
     }
 }
-
-function bool IsAttackingTeam(int TeamNumber)
-{
-    return ( TeamNumber == CurrentAttackingTeam );
-}
-
-
 
 /**
  * FindPlayerStart()
@@ -391,6 +443,7 @@ function float RatePlayerStart(NavigationPoint N, byte Team, Controller Player)
 DefaultProperties
 {
     MaxTeamSize=3
+    MaxLives=1;
 
     // testing with bots
     MinPlayers=6
@@ -408,6 +461,7 @@ DefaultProperties
     bSpawnInTeamArea=true
     bPlayersBalanceTeams=false
     bPlayersMustBeReady=true
+    bWeaponShouldViewShake=false
     bBalanceTeams=true
     bWeaponStay=true
 

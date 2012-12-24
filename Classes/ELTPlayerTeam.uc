@@ -24,7 +24,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 23/12/2012 2:42:22 PM$
+ * @version $wotgreal_dt: 24/12/2012 4:29:36 AM$
  */
 class ELTPlayerTeam extends xTeamRoster;
 
@@ -61,7 +61,7 @@ function bool HasOneAlive()
     if ( IsEmpty() )
         return false;
 
-    for (i = 0; i < Size; i++) {
+    for (i = 0; i < Players.Length; i++) {
         if (Players[i] != none ) {
             if ( Players[i].PlayerReplicationInfo != none ) {
                 if ( !Players[i].PlayerReplicationInfo.bOutOfLives ) {
@@ -73,81 +73,65 @@ function bool HasOneAlive()
     return false;
 }
 
+/**
+ * AddToTeam(Other)
+ *
+ * Call parent method, and if successful, increase NumPlayers by 1 and
+ * add Controller to our Players array.
+ */
 function bool AddToTeam( Controller Other )
 {
     if ( super.AddToTeam(Other) ) {
-
-        Log("## EliteTeam"@TeamIndex@", Player"@Players.Length@", Size:"@Size@", NumPlayers:"@NumPlayers);
-        Log("   - adding"@ Other.PlayerReplicationInfo.PlayerName);
-
-        if ( ELTPlayerReplication(Other.PlayerReplicationInfo) != None ) {
-            ELTPlayerReplication(Other.PlayerReplicationInfo).TeamPosition = Players.Length;
-            ELTPlayerReplication(Other.PlayerReplicationInfo).NetUpdateTime = Level.TimeSeconds - 1;
-        }
-
         Players[Players.Length] = Other;
         NumPlayers++;
-
         return true;
     }
     return false;
 }
 
+/**
+ * RemoveFromTeam(Other)
+ *
+ * Search the Players array for Controller.
+ * Remove if found, call parent method and decrease NumPlayers by 1
+ */
 function RemoveFromTeam(Controller Other)
 {
     local int i;
 
-    // find controller in our players array
     for (i = 0; i < Players.Length; i++) {
         if ( Players[i] == Other ) {
-            Log("## EliteTeam"@TeamIndex@", Player"@i@", Size:"@Size@", NumPlayers:"@NumPlayers);
-            Log("   - removing"@ Other.PlayerReplicationInfo.PlayerName);
-
-            Players[i] = None;
-            NumPlayers--;
-
             super.RemoveFromTeam(Other);
-            return;
+            Players.Remove(i, 1);
+            NumPlayers--;
+            break;
         }
     }
-
-    // should never reach this, but should also never stop working.
-    Warn("not found:"@Other);
-    super.RemoveFromTeam(Other);
 }
 
+/**
+ * Advance the internal attacker index by one, or reset
+ * if end of array has been reached.
+ */
 function int GetNextAttacker()
 {
-    local int i;
-    local Controller NextAttacker;
-
-    Log("## EliteTeam"@TeamIndex@" - get next attacker");
+    local int CurrentAttackerNum;
 
     if ( IsEmpty() ) {
-        Warn("team is empty");
-    } else {
-
-        if (NextAttackerNum == Size)
-            NextAttackerNum = 0; // reset
-
-        Log("  - NextAttackerNum:"@NextAttackerNum);
-
-        // find next attacker index in our players array
-        for (i = 0; i < Players.Length; i++) {
-            if (i == NextAttackerNum && Players[i] != None) {
-                NextAttacker = Players[i];
-                NextAttackerNum++;
-                break;
-            }
-        }
-
-        // final sanity check
-        if ( NextAttacker == none ) {
-            Warn("NextAttacker was empty");
-        }
+        NextAttackerNum = 0;
+        return -1;
     }
 
-    return NextAttackerNum;
+    if (NextAttackerNum >= Players.Length){
+        NextAttackerNum = 0;
+    }
+
+    if ( Players[NextAttackerNum] != None ) {
+        CurrentAttackerNum = NextAttackerNum;
+        NextAttackerNum++;
+    }
+
+    return CurrentAttackerNum;
 }
 
 defaultProperties
