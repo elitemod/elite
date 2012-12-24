@@ -20,20 +20,33 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 23/12/2012 1:34:01 PM$
+ * @version $wotgreal_dt: 23/12/2012 4:49:19 PM$
  */
 class ELTGameReplication extends GameReplicationInfo;
 
 var int CurrentAttackingTeam, CurrentRound;
 var int RoundTimeLimit, GoalActivationTime;
 var int AttackingPlayerNum;
+var bool bRoundInProgress;
+
+enum ERoundWinner
+{
+    ERW_None,
+    ERW_RedAttacked,
+    ERW_BlueAttacked,
+    ERW_RedDefended,
+    ERW_BlueDefended,
+    ERW_Draw,
+};
+var ERoundWinner RoundWinner;
 
 replication
 {
     reliable if( bNetDirty && (Role == ROLE_Authority) ) // Variables the server should send to the client.
         CurrentAttackingTeam, CurrentRound,
         RoundTimeLimit, GoalActivationTime,
-        AttackingPlayerNum;
+        AttackingPlayerNum, RoundWinner,
+        bRoundInProgress;
 }
 
 

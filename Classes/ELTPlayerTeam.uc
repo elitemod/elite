@@ -24,7 +24,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 23/12/2012 1:22:12 PM$
+ * @version $wotgreal_dt: 23/12/2012 2:42:22 PM$
  */
 class ELTPlayerTeam extends xTeamRoster;
 
@@ -32,8 +32,8 @@ class ELTPlayerTeam extends xTeamRoster;
 // Variables
 // ============================================================================
 
-var Controller Players[32];
-var int NextAttackerNum;
+var Array<Controller> Players;
+var int NextAttackerNum, NumPlayers;
 
 // ============================================================================
 // Replication
@@ -42,7 +42,7 @@ var int NextAttackerNum;
 replication
 {
     reliable if (bNetDirty && Role == ROLE_Authority)
-        Players, NextAttackerNum;
+        Players, NextAttackerNum, NumPlayers;
 }
 
 // ============================================================================
@@ -51,7 +51,7 @@ replication
 
 function bool IsEmpty()
 {
-    return (Size == 0);
+    return (NumPlayers == 0);
 }
 
 function bool HasOneAlive()
@@ -75,26 +75,21 @@ function bool HasOneAlive()
 
 function bool AddToTeam( Controller Other )
 {
-    local int i;
-
     if ( super.AddToTeam(Other) ) {
-        for (i = 0; i < Size; i++) {
-            if ( Players[i] == none ) {
-                Log("## EliteTeam"@GetHumanReadableName()@", Player Position"@i@", TeamSize:"@Size);
-                Log("   - adding"@ Other.PlayerReplicationInfo.PlayerName);
-                Players[i] = Other;
 
-                if ( ELTPlayerReplication(Other.PlayerReplicationInfo) != None ) {
-                    ELTPlayerReplication(Other.PlayerReplicationInfo).TeamPosition = i;
-                    ELTPlayerReplication(Other.PlayerReplicationInfo).NetUpdateTime = Level.TimeSeconds - 1;
-                }
-                return true;
-            }
+        Log("## EliteTeam"@TeamIndex@", Player"@Players.Length@", Size:"@Size@", NumPlayers:"@NumPlayers);
+        Log("   - adding"@ Other.PlayerReplicationInfo.PlayerName);
+
+        if ( ELTPlayerReplication(Other.PlayerReplicationInfo) != None ) {
+            ELTPlayerReplication(Other.PlayerReplicationInfo).TeamPosition = Players.Length;
+            ELTPlayerReplication(Other.PlayerReplicationInfo).NetUpdateTime = Level.TimeSeconds - 1;
         }
-    }
 
-    // should never reach this.
-    Warn("## EliteTeam: AddToTeam reached end");
+        Players[Players.Length] = Other;
+        NumPlayers++;
+
+        return true;
+    }
     return false;
 }
 
@@ -103,19 +98,21 @@ function RemoveFromTeam(Controller Other)
     local int i;
 
     // find controller in our players array
-    for (i = 0; i < Size; i++) {
+    for (i = 0; i < Players.Length; i++) {
         if ( Players[i] == Other ) {
-            Log("## EliteTeam"@GetHumanReadableName()@", Player Position"@i@", TeamSize:"@Size);
+            Log("## EliteTeam"@TeamIndex@", Player"@i@", Size:"@Size@", NumPlayers:"@NumPlayers);
             Log("   - removing"@ Other.PlayerReplicationInfo.PlayerName);
 
             Players[i] = None;
+            NumPlayers--;
+
             super.RemoveFromTeam(Other);
             return;
         }
     }
 
     // should never reach this, but should also never stop working.
-    Warn("## EliteTeam: RemoveFromTeam reached end because Other was not found");
+    Warn("not found:"@Other);
     super.RemoveFromTeam(Other);
 }
 
@@ -124,27 +121,29 @@ function int GetNextAttacker()
     local int i;
     local Controller NextAttacker;
 
+    Log("## EliteTeam"@TeamIndex@" - get next attacker");
+
     if ( IsEmpty() ) {
-        Warn("## EliteTeam: GetNextAttacker() while team is empty");
+        Warn("team is empty");
     } else {
 
         if (NextAttackerNum == Size)
             NextAttackerNum = 0; // reset
 
+        Log("  - NextAttackerNum:"@NextAttackerNum);
+
         // find next attacker index in our players array
-        for (i = 0; i < Size; i++) {
-            if (Players[i] != None) {
-                if (i == NextAttackerNum) {
-                    NextAttacker = Players[i];
-                    NextAttackerNum++;
-                    break;
-                }
+        for (i = 0; i < Players.Length; i++) {
+            if (i == NextAttackerNum && Players[i] != None) {
+                NextAttacker = Players[i];
+                NextAttackerNum++;
+                break;
             }
         }
 
         // final sanity check
         if ( NextAttacker == none ) {
-            Warn("## EliteTeam: GetNextAttacker() finished but NextAttacker was empty");
+            Warn("NextAttacker was empty");
         }
     }
 

@@ -3,9 +3,20 @@
 //-----------------------------------------------------------
 class ELTRocketLauncherProj extends RocketProj;
 
+var NewLinkTrail FlashyTrail;
+
+simulated function Destroyed()
+{
+    if ( FlashyTrail != None )
+        FlashyTrail.Destroy();
+
+    Super.Destroyed();
+}
+
 simulated function PostBeginPlay()
 {
     if ( Level.NetMode != NM_DedicatedServer) {
+        FlashyTrail = Spawn(class'NewLinkTrail',self);
         SmokeTrail = Spawn(class'EliteMod.ELTRocketLauncherSmoke',self);
         Corona = Spawn(class'RocketCorona',self);
     }
