@@ -19,7 +19,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 4:06:21 PM$
+ * @version $wotgreal_dt: 24/12/2012 4:27:30 PM$
  */
 class ELTRoundGame extends ELTTeamGame;
 
@@ -51,13 +51,19 @@ event InitGame(string Options, out string Error)
 {
     Super.InitGame(Options, Error);
 
-    bRoundInProgress = true;
+    // Disable Time Limit.
     TimeLimit = 0;
-    CurrentRound = 1;
-    RemainingTime = NumRounds * RoundTimeLimit;
 
+    // Total remaining time is the amount of time needed for all rounds to run + delay
+    RemainingTime = (NumRounds * RoundTimeLimit) + EndTimeDelay;
     if ( GameReplicationInfo != None )
         GameReplicationInfo.RemainingTime = RemainingTime;
+
+    // We start in round 1 and thus we are in progress.
+    CurrentRound = 1;
+    bRoundInProgress = true;
+
+    // ... bRoundInProgress is managed by EndRound/StartNewRound
 }
 
 /**
@@ -87,7 +93,6 @@ function ReplicateUpdatedGameInfo()
 
     // time settings
     ELTGameReplication(GameReplicationInfo).RoundTimeLimit = RoundTimeLimit;
-    ELTGameReplication(GameReplicationInfo).GoalActivationTime = GoalActivationTime;
 
     // sync
     ELTGameReplication(GameReplicationInfo).ElapsedTime = ElapsedTime;
@@ -305,11 +310,13 @@ function ScoreKill(Controller Killer, Controller Other)
 
 /**
  * CheckMaxLives()
- * Always return false. CheckScore decides what is dead or not
+ *
+ * Always return false.
+ * CheckScore decides what is dead or not
  */
 function bool CheckMaxLives(PlayerReplicationInfo Scorer)
 {
-    return false; // ignore MaxLives = 1 check in parent ScoreKill
+    return false;
 }
 
 /**
@@ -326,7 +333,6 @@ function Reset() { }
 function RestartAllPlayers()
 {
     local Controller C, NextC;
-
     C = Level.ControllerList;
     while ( C != none ) {
         NextC = C.NextController;
@@ -406,17 +412,11 @@ state MatchInProgress
         super.Timer();
 
         if ( ElapsedTime % 10 == 0 ) { // Force all players to re-synch time every 10 seconds
-            Log("Re-synching...");
             GameReplicationInfo.ElapsedTime = ElapsedTime;
         }
 
-        if ( ResetCountDown > 0 )
-        {
+        if ( ResetCountDown > 0 ) {
             ResetCountDown--;
-
-            Log("Reset in:"@ResetCountDown@" - Red:"@GameReplicationInfo.Teams[0].Score@"Blue:"@GameReplicationInfo.Teams[1].Score);
-
-
             if ( (ResetCountDown > 0) && (ResetCountDown <= 5) )
                 BroadcastLocalizedMessage(class'TimerMessage', ResetCountDown);
             else if ( ResetCountDown == 0 )
@@ -424,17 +424,14 @@ state MatchInProgress
         }
         else
         {
-            Log("Elapsed:"@ElapsedTime@" - Red:"@GameReplicationInfo.Teams[0].Score@"Blue:"@GameReplicationInfo.Teams[1].Score);
-
+            // round time limit
             if ( ElapsedTime >= ELTGameReplication(GameReplicationInfo).RoundTimeLimit )
-            {
-                Log("> RoundTimeLimit!");
-                // round time limit has been hit
                 EndRound(ERER_RoundTime, None, "roundtimelimit");
-            }
         }
     }
 }
+
+
 
 DefaultProperties
 {
@@ -447,9 +444,9 @@ DefaultProperties
     NumRounds=6
 
     // sounds
+    bSkipPlaySound=true
     DrawGameSound=Draw_Game
     NewRoundSound=New_assault_in
-    bSkipPlaySound=true
     AttackerWinRound(0)=Red_team_attacked
     AttackerWinRound(1)=Blue_team_attacked
     DefenderWinRound(0)=Red_team_defended

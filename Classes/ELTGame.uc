@@ -19,7 +19,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 4:08:53 PM$
+ * @version $wotgreal_dt: 24/12/2012 4:23:08 PM$
  */
 class ELTGame extends ELTRoundGame
     config;
@@ -33,9 +33,27 @@ var int GoalActivationTime;
 function ReplicateUpdatedGameInfo()
 {
     super.ReplicateUpdatedGameInfo();
-
     ELTGameReplication(GameReplicationInfo).GoalActivationTime = GoalActivationTime;
 }
+
+/**
+ * Match is in progress
+ */
+state MatchInProgress
+{
+    function Timer()
+    {
+        local GameObjective GO;
+        Super.Timer();
+
+        if ( bRoundInProgress )
+            if ( (ELTGameReplication(GameReplicationInfo).RoundTimeLimit - ElapsedTime) == GoalActivationTime )
+                for ( GO=Teams[0].AI.Objectives; GO!=None; GO=GO.NextObjective )
+                    if ( ELTObjective(GO) != None )
+                        ELTObjective(GO).MakeControllable( CurrentAttackingTeam );
+    }
+}
+
 
 
 /**
@@ -67,29 +85,6 @@ function ObjectiveDisabled( GameObjective DisabledObjective )
     Log("Objective Disabled! -"@DisabledObjective);
 
     super.ObjectiveDisabled( DisabledObjective );
-}
-
-/**
- * Match is in progress
- */
-state MatchInProgress
-{
-    function Timer()
-    {
-        local GameObjective GO;
-        super.Timer();
-
-        if ( bRoundInProgess )
-        {
-            if ( ElapsedTime == GoalActivationTime )
-            {
-                Log("> GoalActivationTime!");
-                for ( GO=Teams[0].AI.Objectives; GO!=None; GO=GO.NextObjective )
-                    if ( ELTObjective(GO) != None )
-                        ELTObjective(GO).MakeControllable( CurrentAttackingTeam );
-            }
-        }
-    }
 }
 
 DefaultProperties
