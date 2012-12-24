@@ -15,12 +15,13 @@
 
 /**
  * ELTObjectivePole
- * This is the large blocking pole in the center of the EliteObjective.
+ *
+ * This is the large blocking pole in the center of the ELTObjectiveBase.
  *
  * @author m3nt0r
  * @package Elite
  * @package Objective
- * @version $wotgreal_dt: 23/12/2012 2:50:59 PM$
+ * @version $wotgreal_dt: 24/12/2012 4:48:33 PM$
  */
 class ELTObjectivePole extends Actor;
 

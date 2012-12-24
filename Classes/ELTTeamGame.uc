@@ -16,10 +16,20 @@
 /**
  * ELTTeamGame
  *
+ * Builds on basic TDM rules, but enforces MaxLives and Health depending
+ * on which team is currently attacking. It also reduces all relevant damage
+ * to exactly 1 damage per hit and gives defenders the ability to rocketjump.
+ *
+ * It also provides valuable informations and helper methods regarding the
+ * current attacker. SelectNextAttacker for example, is used in ELTRoundGame,
+ * while IsAttackingTeam or GetCurrentAttacker is used throughout the entire mod.
+ *
+ * Furthermore, it decides where players get to spawn by querying the ELTPlayerSpawnManager.
+ *
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 3:21:11 PM$
+ * @version $wotgreal_dt: 24/12/2012 4:41:12 PM$
  */
 class ELTTeamGame extends xTeamGame;
 

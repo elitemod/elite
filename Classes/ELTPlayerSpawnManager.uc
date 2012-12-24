@@ -15,17 +15,19 @@
 
 /**
  * ELTPlayerSpawnManager
- * Placeable Actor
  *
+ * Checks if the player start is appropiate for the controller, given the
+ * state of CurrentAttackingTeam in GRI and his team affiliation.
+ *
+ * ==== MAPPER WARNING ====
  * Although mappers could use this item directly, it is recommened to not
  * place it into their levels, as they would bind themselve to this package.
- *
- * Mappers should use the dummy actor provided in dummy package that does
- * not undergo default versioning (in other words: the filename will not change).
+ * Please use "PlayerSpawnManager" available in "Actors -> Info". The mod
+ * will figure out what to do.
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 1:44:20 AM$
+ * @version $wotgreal_dt: 24/12/2012 4:52:54 PM$
  */
 class ELTPlayerSpawnManager extends PlayerSpawnManager;
 

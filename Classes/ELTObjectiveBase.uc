@@ -14,20 +14,16 @@
  */
 
 /**
- * EliteObjective
- * Placeable Actor
+ * ELTObjectiveBase
+ * Clone of xDomBase
  *
- * The center of attention for this gametype.
- *
- * It has 3 different display states it may be in and always
- * starts as "Neutral". As the game progresses the GameInfo timer
- * may trigger "MakeControllable()" which will color the objective
- * according to the DefenderTeamIndex.
+ * This is still very dirty. The interface is simply. I should rewrite
+ * it completely, because there isn't much left of xDom anyway.
  *
  * @author m3nt0r
  * @package Elite
  * @package Objective
- * @version $wotgreal_dt: 24/12/2012 1:59:16 AM$
+ * @version $wotgreal_dt: 24/12/2012 4:48:11 PM$
  */
 class ELTObjectiveBase extends GameObjective;
 
@@ -456,7 +452,7 @@ defaultproperties
     SNeutralState=XGameShaders.DomShaders.GreyGrid
     SDisableState=XGameShaders.DomShaders.GreyGrid
 
-    PulseSpeed=1.0
+    PulseSpeed=2.0
     NoPulseAlpha=128
     DestructionMessage=""
 }

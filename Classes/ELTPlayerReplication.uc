@@ -18,29 +18,15 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 22/12/2012 5:52:53 PM$
+ * @version $wotgreal_dt: 24/12/2012 4:43:35 PM$
  */
 class ELTPlayerReplication extends PlayerReplicationInfo;
 
-var int TeamPosition;
-
-replication
-{
-    reliable if( bNetDirty && (Role == ROLE_Authority) ) // Variables the server should send to the client.
-        TeamPosition;
-}
-
 simulated function string GetLocationName()
 {
-    if(bOutOfLives && !bOnlySpectator)
+    if (bOutOfLives && !bOnlySpectator)
         return default.StringDead;
 
     return Super.GetLocationName();
 }
 
-
-
-DefaultProperties
-{
-
-}

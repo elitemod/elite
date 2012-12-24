@@ -16,11 +16,11 @@
 /**
  * ELTPlayer
  *
- * PlayerController
+ * Custom PlayerController to provide correct PRI
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 22/12/2012 4:14:10 PM$
+ * @version $wotgreal_dt: 24/12/2012 4:48:50 PM$
  */
 class ELTPlayer extends xPlayer;
 

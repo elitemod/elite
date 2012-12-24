@@ -24,7 +24,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 4:29:36 AM$
+ * @version $wotgreal_dt: 24/12/2012 4:54:18 PM$
  */
 class ELTPlayerTeam extends xTeamRoster;
 

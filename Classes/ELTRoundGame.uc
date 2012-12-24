@@ -16,10 +16,17 @@
 /**
  * ELTRoundGame
  *
+ * Manages everything regarding round-based gameplay.
+ * - It ends the game if max rounds are hit
+ * - Restarts all players and objects each new round
+ * - Replicates timings for reset delays and match time
+ * - Validates if a kill leads to an end of the current round
+ * - Decides the scoring team and increases their score.
+ *
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 4:27:30 PM$
+ * @version $wotgreal_dt: 24/12/2012 4:36:48 PM$
  */
 class ELTRoundGame extends ELTTeamGame;
 

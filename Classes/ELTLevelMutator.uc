@@ -20,11 +20,15 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 2:12:27 AM$
+ * @version $wotgreal_dt: 24/12/2012 4:46:22 PM$
  */
 class ELTLevelMutator extends Mutator;
 
 var name WeaponName[2];
+
+// ============================================================================
+// Implementation
+// ============================================================================
 
 simulated function BeginPlay()
 {

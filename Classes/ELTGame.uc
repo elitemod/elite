@@ -16,15 +16,24 @@
 /**
  * ELTGame
  *
+ * The final blend.
+ * - Manages the availablilty of the GameObjective.
+ *
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 4:23:08 PM$
+ * @version $wotgreal_dt: 24/12/2012 4:46:10 PM$
  */
 class ELTGame extends ELTRoundGame
     config;
 
-var int GoalActivationTime;
+var int GoalActivationTime; // if you set this to 5 the objective will
+                            // become controllable in the LAST 5 SECONDS of the current round.
+
+
+// ============================================================================
+// Implementation
+// ============================================================================
 
 /**
  * ReplicateUpdatedGameInfo()
@@ -54,11 +63,8 @@ state MatchInProgress
     }
 }
 
-
-
 /**
  * CanDisableObjective()
- *
  * Is objective allowed to be disabled ?
  */
 function bool CanDisableObjective( GameObjective GO )
@@ -75,23 +81,11 @@ function bool CanDisableObjective( GameObjective GO )
     return ELTObjective(GO).bControllable;
 }
 
-/**
- * ObjectiveDisabled()
- *
- * I think this is an event?
- */
-function ObjectiveDisabled( GameObjective DisabledObjective )
-{
-    Log("Objective Disabled! -"@DisabledObjective);
-
-    super.ObjectiveDisabled( DisabledObjective );
-}
-
 DefaultProperties
 {
     Acronym="ELT"
     GameName="Elite Game"
-
     MinNetPlayers=2
+
     GoalActivationTime=15
 }
