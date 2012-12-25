@@ -20,9 +20,33 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 25/12/2012 1:12:58 PM$
+ * @version $wotgreal_dt: 25/12/2012 2:34:29 PM$
  */
 class ELTPawn extends xPawn;
+
+function TakeDrowningDamage()
+{
+    // no drowning
+}
+
+function TakeDamage(int Damage, Pawn instigatedBy, Vector hitlocation, Vector momentum, class<DamageType> damageType)
+{
+    if (!bIsCrouched && !bWantsToCrouch) {
+        if (ClassIsChildOf(damageType, class'DamTypeRocket') && InstigatedBy == Self)
+        {
+            SetMovementPhysics();
+
+            // rocket jump
+            Velocity += (Momentum*1.6)/Mass;
+            Velocity.Z = 3.2 * JumpZ;
+
+            SetPhysics(PHYS_Falling);
+            return;
+        }
+    }
+    super.TakeDamage(Damage,InstigatedBy,HitLocation,Momentum,DamageType);
+}
+
 
 DefaultProperties
 {

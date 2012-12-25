@@ -29,7 +29,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 25/12/2012 1:10:44 PM$
+ * @version $wotgreal_dt: 25/12/2012 1:27:47 PM$
  */
 class ELTTeamGame extends xTeamGame
     config;
@@ -170,7 +170,6 @@ function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector H
             Damage = AttackerDamage;
 
             InstigatedPRI = InstigatedBy.Controller.PlayerReplicationInfo;
-
             // announce distance to player
             if ( PlayerController(InstigatedBy.Controller) != None ) {
                 DistanceInMeters = int(VSize(Hitlocation-InstigatedBy.Location)*0.01875.f);
@@ -183,17 +182,10 @@ function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector H
     // defender damage
     else if (ClassIsChildOf(DamageType, class'DamTypeRocket'))
     {
-        if ( InstigatedBy == None || Injured == None ) {
-            Damage = 0;
-        }
-        else if (Injured == InstigatedBy) {
-            // rocket launcher jump
-            InstigatedBy.Velocity += (1.6*Momentum);
-            InstigatedBy.Velocity.Z *= 1.2;
-        }
-        else if (Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum()) {
-            // rocket damage
+        if (Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum()) {
             Damage = DefenderDamage;
+        } else {
+            Damage = 0;
         }
     }
     // disable default engine damage
@@ -281,7 +273,7 @@ function InitializeBot(Bot NewBot, UnrealTeamInfo BotTeam, RosterEntry Chosen)
     super.InitializeBot(NewBot, BotTeam, Chosen);
 
 /*
-    // nasty bots
+    // supernasty bots
     NewBot.Accuracy = 1;
     NewBot.StrafingAbility = 1;
     NewBot.Tactics = 1;
@@ -289,10 +281,10 @@ function InitializeBot(Bot NewBot, UnrealTeamInfo BotTeam, RosterEntry Chosen)
 */
 }
 
-
-/* CheckScore()
-see if this score means the game ends
-*/
+/**
+ * CheckScore()
+ * Usually runs testing code, but in this mode we just check if time's up.
+ */
 function CheckScore(PlayerReplicationInfo Scorer)
 {
     if ( (Scorer != None) && bOverTime )
