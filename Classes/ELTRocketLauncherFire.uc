@@ -21,7 +21,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage Weapons
- * @version $wotgreal_dt: 24/12/2012 8:08:48 PM$
+ * @version $wotgreal_dt: 25/12/2012 11:38:06 AM$
  */
 class ELTRocketLauncherFire extends RocketFire;
 
@@ -39,6 +39,8 @@ simulated function PostBeginPlay()
 
 function Timer()
 {
+    Super.Timer();
+
     if ( !Weapon.AmmoMaxed(0) )
         Weapon.AddAmmo(1,0);
 }

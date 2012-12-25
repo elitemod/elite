@@ -24,7 +24,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 4:54:18 PM$
+ * @version $wotgreal_dt: 25/12/2012 12:55:09 PM$
  */
 class ELTPlayerTeam extends xTeamRoster;
 
@@ -137,4 +137,5 @@ function int GetNextAttacker()
 defaultProperties
 {
     NetUpdateFrequency=1
+    DefaultPlayerClass=class'EliteMod.ELTPawn'
 }

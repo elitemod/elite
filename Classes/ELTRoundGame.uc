@@ -26,7 +26,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 25/12/2012 12:46:53 AM$
+ * @version $wotgreal_dt: 25/12/2012 1:02:49 PM$
  */
 class ELTRoundGame extends ELTTeamGame;
 
@@ -165,7 +165,7 @@ function EndRound(ERER_Reason RoundEndReason, Pawn Instigator, String Reason)
 {
     local Controller C;
     local PlayerReplicationInfo PRI;
-    local int ScoringTeam;
+    local byte ScoringTeam;
 
     if ( !bRoundInProgress )
         return;
@@ -346,6 +346,8 @@ function RestartPlayer(Controller C)
     local Controller Attacker;
     Attacker = GetCurrentAttacker();
 
+    Log("RestartPlayer:"@C);
+
     if ( IsAttackingTeam ( C.GetTeamNum() ) ) {
         if ( C != Attacker ) {
             C.PlayerReplicationInfo.NumLives = 0;
@@ -354,16 +356,6 @@ function RestartPlayer(Controller C)
     } else if ( !bRoundInProgress ) {
         C.PlayerReplicationInfo.NumLives = 1;
         C.PlayerReplicationInfo.bOutOfLives = false;
-    }
-
-    // focus "OUT" attacking-team player on "ACTIVE" attacker
-    if ( C.PlayerReplicationInfo.bOutOfLives )
-    {
-        if ( PlayerController(C) != None && Attacker != None
-          && (C.GetTeamNum() == Attacker.GetTeamNum()) ) // if on same team
-        {
-            PlayerController(C).ClientSetViewTarget( Attacker.Pawn );
-        }
     }
 
     Super(TeamGame).RestartPlayer(C); // skip ELTTeamGame, use standard TeamGame

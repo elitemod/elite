@@ -29,18 +29,18 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 9:00:18 PM$
+ * @version $wotgreal_dt: 25/12/2012 1:10:44 PM$
  */
 class ELTTeamGame extends xTeamGame
     config;
 
 var Array<ELTPlayerSpawnManager> SpawnManagers;
-var int CurrentAttackingTeam, FirstAttackingTeam;
+var byte CurrentAttackingTeam, FirstAttackingTeam;
 var int AttackingPlayerNum;
 
-var config  string AttackerWeapon, DefenderWeapon;
-var config  int AttackerHealth, DefenderHealth;
-var config  int AttackerDamage, DefenderDamage;
+var config string AttackerWeapon, DefenderWeapon;
+var config int AttackerHealth, DefenderHealth;
+var config int AttackerDamage, DefenderDamage;
 
 // ============================================================================
 // Implementation
@@ -155,6 +155,9 @@ function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector H
     local int DistanceInMeters;
     local PlayerReplicationInfo InstigatedPRI;
 
+
+    Log("injured Pawn:"@injured@", instigatedBy Pawn:"@instigatedBy);
+
     // as usual
     Damage = super.ReduceDamage(Damage,Injured,InstigatedBy,HitLocation,Momentum,DamageType);
 
@@ -242,6 +245,48 @@ function bool RestartAttacker()
     }
 
     return false;
+}
+
+/**
+ * SpawnBot()
+ *
+ * Spawn and initialize a bot. Overwritten to spawn an 'ELTBot' instead of 'default.xBot', because
+ * we want Bots to use our ELTPawn, not xPawn. I haven't found a nicer way to replace this.
+ */
+function Bot SpawnBot(optional string botName)
+{
+    local Bot NewBot;
+    local RosterEntry Chosen;
+    local UnrealTeamInfo BotTeam;
+
+    BotTeam = GetBotTeam(); // ELTPlayerTeam
+    Chosen = BotTeam.ChooseBotClass(botName);
+    if (Chosen.PawnClass == None)
+        Chosen.Init();
+
+    NewBot = Spawn(class'EliteMod.ELTBot');
+    if ( NewBot != None )
+        InitializeBot(NewBot,BotTeam,Chosen);
+
+    return NewBot;
+}
+
+/**
+ * InitializeBot()
+ *
+ * This was overwritten to increase the difficulty and skill on all bots.
+ */
+function InitializeBot(Bot NewBot, UnrealTeamInfo BotTeam, RosterEntry Chosen)
+{
+    super.InitializeBot(NewBot, BotTeam, Chosen);
+
+/*
+    // nasty bots
+    NewBot.Accuracy = 1;
+    NewBot.StrafingAbility = 1;
+    NewBot.Tactics = 1;
+    NewBot.InitializeSkill(AdjustedDifficulty+2);
+*/
 }
 
 
@@ -502,6 +547,7 @@ DefaultProperties
     bWeaponShouldViewShake=false
     bBalanceTeams=true
     bWeaponStay=true
+    bEpicNames=true
 
     // config options
     AttackerWeapon="EliteMod.ELTLightning"
@@ -517,5 +563,5 @@ DefaultProperties
     PlayerControllerClassName="EliteMod.ELTPlayer"
     GameReplicationInfoClass=class'EliteMod.ELTGameReplication'
     DefaultEnemyRosterClass="EliteMod.ELTPlayerTeam"
-    MutatorClass="EliteMod.ELTLevelMutator"
+    MutatorClass="EliteMod.ELTMapMutator"
 }

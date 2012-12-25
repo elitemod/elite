@@ -32,7 +32,7 @@
  * @author m3nt0r
  * @package Elite
  * @package Objective
- * @version $wotgreal_dt: 25/12/2012 3:42:23 AM$
+ * @version $wotgreal_dt: 25/12/2012 12:20:03 PM$
  */
 class ELTObjective extends GameObjective;
 
@@ -220,7 +220,7 @@ state Controllable
 
     function Touch(Actor Other)
     {
-        local int TouchingTeamIndex;
+        local byte TouchingTeamIndex;
         if ( Other.IsA('Pawn') && Pawn(Other).IsPlayerPawn() ) {
             TouchingTeamIndex = Pawn(Other).GetTeamNum();
             if ( TouchingTeamIndex != DefenderTeamIndex ) {
@@ -233,7 +233,7 @@ state Controllable
 
     function UnTouch(Actor Other)
     {
-        local int TouchingTeamIndex;
+        local byte TouchingTeamIndex;
         if ( Other.IsA('Pawn') && Pawn(Other).IsPlayerPawn() ) {
             TouchingTeamIndex = Pawn(Other).GetTeamNum();
             if ( TouchingTeamIndex != DefenderTeamIndex ) {

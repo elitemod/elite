@@ -21,7 +21,7 @@
  * @author m3nt0r
  * @package Elite
  * @package Objective
- * @version $wotgreal_dt: 25/12/2012 3:38:40 AM$
+ * @version $wotgreal_dt: 25/12/2012 12:20:40 PM$
  */
 class ELTObjectiveBase extends Actor;
 

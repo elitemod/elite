@@ -16,17 +16,34 @@
 /**
  * ELTPlayer
  *
- * Custom PlayerController to provide correct PRI
- *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 8:30:52 PM$
+ * @subpackage Controllers
+ * @version $wotgreal_dt: 25/12/2012 1:13:34 PM$
  */
 class ELTPlayer extends xPlayer;
+
+// ============================================================================
+// Implementation
+// ============================================================================
 
 /**
  * Suicide()
  * End round if the Player is the current attacker.
+ */
+function SetPawnClass(string inClass, string inCharacter)
+{
+    if ( inClass != "" ) {
+        inClass = "EliteMod.ELTPawn";
+    }
+    super.SetPawnClass(inClass, inCharacter);
+}
+
+/**
+ * Suicide()
+ *
+ * While testing i noticed suicides aren't picked up properly if i am attacking.
+ * So here we go an end the round if one feels suicidal
  */
 exec function Suicide() {
     super.Suicide();
@@ -34,9 +51,8 @@ exec function Suicide() {
     if ( ELTGame(Level.Game) == None )
         return;
 
-    if ( ELTGame(Level.Game).GetCurrentAttacker() == self ) {
+    if ( ELTGame(Level.Game).GetCurrentAttacker() == self )
         ELTGame(Level.Game).EndRound(ERER_AttackerDead, Pawn, "attacker_suicided");
-    }
 }
 
 // ============================================================================
@@ -45,5 +61,7 @@ exec function Suicide() {
 
 DefaultProperties
 {
-     PlayerReplicationInfoClass=Class'EliteMod.ELTPlayerReplication'
+    PlayerReplicationInfoClass=class'EliteMod.ELTPlayerReplication'
+    PawnClass=class'EliteMod.ELTPawn'
+    bAdrenalineEnabled=False
 }
