@@ -22,7 +22,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 9:24:54 PM$
+ * @version $wotgreal_dt: 25/12/2012 2:46:10 AM$
  */
 class ELTGame extends ELTRoundGame
     config;
@@ -80,7 +80,7 @@ function bool CanDisableObjective( GameObjective GO )
     if ( ELTObjective(GO) == None )
         return false;
 
-    return ELTObjective(GO).bControllable;
+    return ELTObjective(GO).IsControllable();
 }
 
 DefaultProperties
@@ -89,5 +89,5 @@ DefaultProperties
     GameName="Elite Game"
     MinNetPlayers=2
 
-    GoalActivationTime=15
+    GoalActivationTime=55
 }

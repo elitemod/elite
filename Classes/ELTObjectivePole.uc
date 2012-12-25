@@ -21,9 +21,11 @@
  * @author m3nt0r
  * @package Elite
  * @package Objective
- * @version $wotgreal_dt: 24/12/2012 4:48:33 PM$
+ * @version $wotgreal_dt: 25/12/2012 3:37:44 AM$
  */
 class ELTObjectivePole extends Actor;
+
+#exec OBJ LOAD FILE=UCGeneric.utx
 
 // ============================================================================
 // Variables
@@ -32,43 +34,21 @@ class ELTObjectivePole extends Actor;
 var(Material) Material      CurrentSkin;
 
 // ============================================================================
-// Replication
-// ============================================================================
-
-replication
-{
-    reliable if (Role == ROLE_Authority)
-        CurrentSkin;
-}
-
-// ============================================================================
-// Implementation
-// ============================================================================
-
-simulated function SetTeamSkin(Material NewSkin)
-{
-    CurrentSkin = NewSkin;
-}
-
-simulated function Tick( float t )
-{
-    Super.Tick(t);
-    Skins[0] = CurrentSkin;
-}
-
-// ============================================================================
 // Defaults
 // ============================================================================
 
 defaultproperties
 {
-    RemoteRole=ROLE_SimulatedProxy
+    RemoteRole=ROLE_DumbProxy
+    NetUpdateFrequency=100
     bAlwaysRelevant=true
+    bNetNotify=true
+
+    Skins(0)=Texture'UCGeneric.SolidColors.White'
 
     // TODO: crappy mesh, outsource
     StaticMesh=StaticMesh'Plutonic_BP2_static.Factory.SG_outer'
 
-    CurrentSkin=Texture'UCGeneric.SolidColors.White'
     DrawType=DT_StaticMesh
     DrawScale3D=(X=0.6,Y=0.6,Z=2.8)
     PrePivot=(X=0,Y=0,Z=70)

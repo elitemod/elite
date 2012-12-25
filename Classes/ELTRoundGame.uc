@@ -26,7 +26,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 10:19:56 PM$
+ * @version $wotgreal_dt: 25/12/2012 12:46:53 AM$
  */
 class ELTRoundGame extends ELTTeamGame;
 
@@ -461,6 +461,7 @@ state MatchInProgress
         super.Timer();
 
         RemainingTime = GetRemainingRoundTime();
+
         if ( RoundElapsedTime % 10 == 0 )
         { // Force all players to re-synch time every 10 seconds
             ELTGameReplication(GameReplicationInfo).RemainingMinute = RemainingTime;
