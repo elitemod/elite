@@ -20,7 +20,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage Weapons
- * @version $wotgreal_dt: 24/12/2012 8:08:19 PM$
+ * @version $wotgreal_dt: 01/01/2013 10:20:08 PM$
  */
 class ELTLightningFire extends SniperFire;
 
@@ -49,6 +49,6 @@ function Timer()
 defaultproperties
 {
     AmmoPerFire=99
-    AmmoRegenTime=0.3
+    AmmoRegenTime=0.5
     AmmoClass=class'EliteMod.ELTLightningAmmo'
 }

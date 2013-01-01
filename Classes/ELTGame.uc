@@ -22,7 +22,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 25/12/2012 2:46:10 AM$
+ * @version $wotgreal_dt: 01/01/2013 10:41:46 PM$
  */
 class ELTGame extends ELTRoundGame
     config;
@@ -54,14 +54,19 @@ state MatchInProgress
 {
     function Timer()
     {
-        local GameObjective GO;
+        local int RemainingRoundTime;
+
         Super.Timer();
 
-        if ( bRoundInProgress )
-            if ( GetRemainingRoundTime() == GoalActivationTime )
-                for ( GO=Teams[0].AI.Objectives; GO!=None; GO=GO.NextObjective )
-                    if ( ELTObjective(GO) != None )
-                        ELTObjective(GO).MakeControllable( CurrentAttackingTeam );
+        if ( bRoundInProgress ) {
+            RemainingRoundTime = GetRemainingRoundTime();
+
+            if ( RemainingRoundTime < (GoalActivationTime-1) && RemainingRoundTime > 0 )
+                BroadcastLocalizedMessage(class'EliteMod.ELTMessageRoundTime', RemainingRoundTime);
+
+            if ( RemainingRoundTime == GoalActivationTime )
+                TryActivateGameObjectives();
+        }
     }
 }
 
@@ -83,11 +88,66 @@ function bool CanDisableObjective( GameObjective GO )
     return ELTObjective(GO).IsControllable();
 }
 
+
+/**
+ * BroadcastPoleBecameActive()
+ *
+ * Display "pole is active" at goal time, triggered by MatchInProgress.Timer()
+ */
+function bool TryActivateGameObjectives()
+{
+    local GameObjective GO;
+    local Controller    C, NextC;
+    local int           MessageStartIndex;
+    local bool          bDidActivateSomething;
+
+    if ( !GameReplicationInfo.bMatchHasBegun || bGameEnded || bWaitingToStartMatch || !bRoundInProgress )
+        return false;
+
+    // try activate any ELTObjectives in this map
+    bDidActivateSomething = false;
+    for ( GO=Teams[0].AI.Objectives; GO!=None; GO=GO.NextObjective ) {
+        if ( ELTObjective(GO) != None ) {
+            ELTObjective(GO).MakeControllable( CurrentAttackingTeam );
+            bDidActivateSomething = true;
+        }
+    }
+
+    // there is no point to announce something that did not happen.
+    if ( !bDidActivateSomething )
+        return false;
+
+    // annouce to all players that the objective is now active and can be controlled
+    MessageStartIndex = 0;
+    C = Level.ControllerList;
+    while ( C != None )
+    {
+        NextC = C.NextController;
+        if ( C.PlayerReplicationInfo != None && PlayerController(C) != None )
+        {
+            if ( C.PlayerReplicationInfo.bOutOfLives || C.PlayerReplicationInfo.bOnlySpectator )
+                MessageStartIndex = 2;
+
+            if ( Super.IsAttackingTeam( C.GetTeamNum() ) )
+                PlayerController(C).ReceiveLocalizedMessage( class'EliteMod.ELTMessageObjective', MessageStartIndex, C.PlayerReplicationInfo);
+            else
+                PlayerController(C).ReceiveLocalizedMessage( class'EliteMod.ELTMessageObjective', MessageStartIndex + 1, C.PlayerReplicationInfo);
+        }
+        C = NextC;
+    }
+
+    return true;
+}
+
+// ============================================================================
+// Defaults
+// ============================================================================
+
 DefaultProperties
 {
     Acronym="ELT"
     GameName="Elite Game"
     MinNetPlayers=2
 
-    GoalActivationTime=55
+    GoalActivationTime=15
 }

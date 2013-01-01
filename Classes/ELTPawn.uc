@@ -20,7 +20,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 25/12/2012 2:34:29 PM$
+ * @version $wotgreal_dt: 01/01/2013 9:10:53 PM$
  */
 class ELTPawn extends xPawn;
 
@@ -39,8 +39,9 @@ function TakeDamage(int Damage, Pawn instigatedBy, Vector hitlocation, Vector mo
             // rocket jump
             Velocity += (Momentum*1.6)/Mass;
             Velocity.Z = 3.2 * JumpZ;
-
             SetPhysics(PHYS_Falling);
+
+            // do not continue with TakeDamage
             return;
         }
     }

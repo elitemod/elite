@@ -29,7 +29,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 25/12/2012 1:27:47 PM$
+ * @version $wotgreal_dt: 01/01/2013 10:14:40 PM$
  */
 class ELTTeamGame extends xTeamGame
     config;

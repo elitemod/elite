@@ -27,7 +27,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 24/12/2012 9:36:32 PM$
+ * @version $wotgreal_dt: 01/01/2013 10:32:43 PM$
  */
 class ELTRoundGameHUD extends HUDCTeamDeathMatch;
 

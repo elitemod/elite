@@ -26,7 +26,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 25/12/2012 1:02:49 PM$
+ * @version $wotgreal_dt: 01/01/2013 10:33:35 PM$
  */
 class ELTRoundGame extends ELTTeamGame;
 
@@ -522,6 +522,56 @@ function bool CheckEndGame(PlayerReplicationInfo Winner, string Reason)
     EndTime = Level.TimeSeconds + EndTimeDelay;
     return true;
 }
+
+
+/**
+ * PlayEndOfMatchMessage()
+ * Check scores, play DrawGame if thats how it is.
+ */
+function PlayEndOfMatchMessage()
+{
+    local controller C;
+
+    if ( ((Teams[0].Score == 0) || (Teams[1].Score == 0)) && (Teams[0].Score + Teams[1].Score >= 3) )
+    {
+        for ( C = Level.ControllerList; C != None; C = C.NextController )
+        {
+            if ( C.IsA('PlayerController') )
+            {
+                if ( Teams[0].Score > Teams[1].Score )
+                {
+                    if ( (C.PlayerReplicationInfo.Team == Teams[0]) || C.PlayerReplicationInfo.bOnlySpectator )
+                        PlayerController(C).QueueAnnouncement(AltEndGameSoundName[0], 1);
+                    else
+                        PlayerController(C).QueueAnnouncement(AltEndGameSoundName[1], 1);
+                }
+                else
+                {
+                    if ( (C.PlayerReplicationInfo.Team == Teams[1]) || C.PlayerReplicationInfo.bOnlySpectator )
+                        PlayerController(C).QueueAnnouncement(AltEndGameSoundName[0], 1);
+                    else
+                        PlayerController(C).QueueAnnouncement(AltEndGameSoundName[1], 1);
+                }
+            }
+        }
+    }
+    else
+    {
+        for ( C = Level.ControllerList; C != None; C = C.NextController )
+        {
+            if ( C.IsA('PlayerController') )
+            {
+                if ( Teams[1].Score > Teams[0].Score )
+                    PlayerController(C).QueueAnnouncement(EndGameSoundName[1], 1);  // Blue teams wins
+                else if ( Teams[1].Score < Teams[0].Score )
+                    PlayerController(C).QueueAnnouncement(EndGameSoundName[0], 1);  // Red team wins
+                else
+                    PlayerController(C).QueueAnnouncement(DrawGameSound, 1);        // Draw Game
+            }
+        }
+    }
+}
+
 // ============================================================================
 // Defaults
 // ============================================================================
@@ -530,13 +580,14 @@ DefaultProperties
 {
     Acronym="ELT"
     GameName="Elite Roundbased Game"
-    HUDType="EliteMod.ELTRoundGameHUD"
 
     bTeamScoreRounds=false
 
-    RoundTimeLimit=60
+    RoundTimeLimit=30
     ResetTimeDelay=5
     NumRounds=6
+
+    HUDType="EliteMod.ELTRoundGameHUD"
 
     // sounds
     bSkipPlaySound=true
