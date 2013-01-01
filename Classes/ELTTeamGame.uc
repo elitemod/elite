@@ -29,7 +29,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 01/01/2013 10:14:40 PM$
+ * @version $wotgreal_dt: 01/01/2013 11:18:36 PM$
  */
 class ELTTeamGame extends xTeamGame
     config;
@@ -152,13 +152,6 @@ function bool CriticalPlayer(Controller Other)
  */
 function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector HitLocation, out vector Momentum, class<DamageType> DamageType )
 {
-    local int DistanceInMeters;
-    local PlayerReplicationInfo InstigatedPRI;
-
-
-    Log("injured Pawn:"@injured@", instigatedBy Pawn:"@instigatedBy);
-
-    // as usual
     Damage = super.ReduceDamage(Damage,Injured,InstigatedBy,HitLocation,Momentum,DamageType);
 
     // attacker damage
@@ -166,39 +159,50 @@ function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector H
       || ClassIsChildOf(DamageType, class'DamTypeSniperHeadShot')
       || ClassIsChildOf(DamageType, class'DamTypeShockBeam'))
     {
-        if (Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum()) {
-            Damage = AttackerDamage;
+        Damage = 0; // no damage unless it is an enemy
 
-            InstigatedPRI = InstigatedBy.Controller.PlayerReplicationInfo;
-            // announce distance to player
-            if ( PlayerController(InstigatedBy.Controller) != None ) {
-                DistanceInMeters = int(VSize(Hitlocation-InstigatedBy.Location)*0.01875.f);
-                PlayerController(InstigatedBy.Controller).ReceiveLocalizedMessage(class'EliteMod.ELTMessageDistance', DistanceInMeters, InstigatedPRI);
+        if ( InstigatedBy != None && InstigatedBy.Controller != None )
+            if ( Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum() ) {
+                Damage = AttackerDamage;
+                AnnounceShotDistance(InstigatedBy.Controller, HitLocation);
             }
-        } else {
-            Damage = 0;
-        }
     }
     // defender damage
     else if (ClassIsChildOf(DamageType, class'DamTypeRocket'))
     {
-        if (Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum()) {
-            Damage = DefenderDamage;
-        } else {
-            Damage = 0;
-        }
+        Damage = 0; // no damage unless it is an enemy
+
+        if ( InstigatedBy != None && InstigatedBy.Controller != None )
+            if (Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum()) {
+                Damage = DefenderDamage;
+            }
     }
-    // disable default engine damage
     else if (ClassIsChildOf(DamageType, class'Crushed')) {
-        if ( Damage < 10 ) // jump on head?
-            Damage = 0;
+        // no crush damage by other teammates.
+        if ( InstigatedBy != None && InstigatedBy.Controller != None )
+            if (Injured.Controller.GetTeamNum() == InstigatedBy.Controller.GetTeamNum())
+                Damage = 0;
     }
     else if (ClassIsChildOf(DamageType, class'Fell')) {
-        // falling damage
+        // no falling damage.
         Damage = 0;
     }
 
     return Damage;
+}
+
+/**
+ * AnnounceShotDistance()
+ * Brodcast special event message to insitigator
+ */
+function AnnounceShotDistance(Controller Instigator, Vector HitLocation)
+{
+    local int DistanceInMeters;
+
+    DistanceInMeters = int( VSize( HitLocation - Instigator.Pawn.Location ) * 0.01875.f );
+
+    if ( PlayerController(Instigator) != None )
+        PlayerController(Instigator).ReceiveLocalizedMessage(class'EliteMod.ELTMessageDistance', DistanceInMeters);
 }
 
 /**
