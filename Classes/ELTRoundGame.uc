@@ -26,7 +26,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 01/01/2013 10:33:35 PM$
+ * @version $wotgreal_dt: 02/01/2013 2:07:59 AM$
  */
 class ELTRoundGame extends ELTTeamGame;
 
@@ -68,7 +68,7 @@ event InitGame(string Options, out string Error)
     TimeLimit = (NumRounds * RoundTimeLimit) / 60;
 
     // Total remaining time is the amount of time needed for all rounds to run + delay
-    RemainingTime = RoundTimeLimit + 1;
+    RemainingTime = RoundTimeLimit;
     if ( GameReplicationInfo != None )
         GameReplicationInfo.RemainingTime = RemainingTime;
 
@@ -147,14 +147,7 @@ function StartNewRound()
     ResetLevel();
     RestartAllPlayers();
 
-    TriggerEvent('RoundStarted', Self, None);
-
     SetGameSpeed( GameSpeed );
-}
-
-event RoundStarted()
-{
-    Log("## round started ! ##");
 }
 
 /**
@@ -583,7 +576,7 @@ DefaultProperties
 
     bTeamScoreRounds=false
 
-    RoundTimeLimit=30
+    RoundTimeLimit=45
     ResetTimeDelay=5
     NumRounds=6
 
