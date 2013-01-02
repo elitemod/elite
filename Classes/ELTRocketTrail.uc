@@ -20,7 +20,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage Weapons
- * @version $wotgreal_dt: 01/01/2013 11:58:19 PM$
+ * @version $wotgreal_dt: 02/01/2013 1:58:39 AM$
  */
 class ELTRocketTrail extends Emitter;
 
@@ -32,8 +32,8 @@ function MakeBlue()
     {
         Emitters[0].ColorScale[1].Color.R = 0;
         Emitters[0].ColorScale[2].Color.R = 0;
-        Emitters[0].ColorScale[1].Color.B = 255;
-        Emitters[0].ColorScale[2].Color.B = 255;
+        Emitters[0].ColorScale[1].Color.B = 170;
+        Emitters[0].ColorScale[2].Color.B = 170;
         Emitters[0].ColorScale[1].Color.G = 0;
         Emitters[0].ColorScale[2].Color.G = 0;
     }

@@ -20,7 +20,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage Weapons
- * @version $wotgreal_dt: 02/01/2013 1:55:12 AM$
+ * @version $wotgreal_dt: 02/01/2013 1:56:28 AM$
  */
 class ELTRocketLauncherProj extends RocketProj;
 
