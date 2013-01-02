@@ -20,7 +20,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage Weapons
- * @version $wotgreal_dt: 01/01/2013 11:56:08 PM$
+ * @version $wotgreal_dt: 02/01/2013 1:55:12 AM$
  */
 class ELTRocketLauncherProj extends RocketProj;
 
@@ -52,13 +52,11 @@ simulated function PostBeginPlay()
 
         if ( TeamNum == 0 ) {
             GlowEffect.MakeRed();
-            LightSaturation=127;
             LightHue=255;
         }
         else if ( TeamNum == 1 ) {
             GlowEffect.MakeBlue();
-            LightSaturation=164;
-            LightHue=104;
+            LightHue=170;
         }
     }
 
@@ -101,6 +99,6 @@ DefaultProperties
 
     // green
     LightBrightness=255
-    LightSaturation=135
+    LightSaturation=127
     LightHue=62
 }
