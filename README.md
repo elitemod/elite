@@ -19,6 +19,7 @@ Signup on this site is very simple and stressfree. Please use the ISSUETRACKER o
 you encounter any bugs. If no one reports, i can't fix them up until i'd notice them myself. Support
 the mod by submitting reports, doesn't matter how small. Everything helps.
 
+- https://github.com/elitemod/elite/issues
 
 ## Contributing
 
@@ -28,24 +29,26 @@ we can all benefit from this.
 
 To contribute just create an account at GitHub (this site) and "FORK" the repository into your new 
 account. Then you can make any changes you want and post them online using their client. If you're 
-satisfied with your edits and think your changes are useful to everybody just sent me a "PULL REQUEST", 
-again on this site, so i can review them. Once i accept them into this repo the changes will be part
-of any future release for everyone.
+satisfied with your edits and think the changes are useful for all just sent me a "PULL REQUEST" so
+i can review them. Once i accept them into this repo the changes will be part of any future release.
 
+- https://github.com/elitemod/elite/pulls
 
 ## Building
 
 Since i have a strong web-background and usually work on a Mac i utilized Ruby-Make to create an easy 
-build script that helps preparing a release using UMake. There are one click packages out there that 
-will install the required "rake" console command on Windows. I used: "rubyinstaller-1.9.3-p327.exe"
+build script that helps preparing a release using **UMake**. There are one click packages out there that 
+will install the required "rake" console command on Windows. I used: ```rubyinstaller-1.9.3-p327.exe```
 
-With this installed just go into the source folder via commandline and type "rake" to start the 
+With this installed just go into the source folder via commandline and type ```rake``` to start the 
 build. If you want to create a brandnew package just edit the "version.txt" and run "rake" again.
 
-For UMAKE to work your copy should be at C:\umake.exe
+For UMAKE to work your copy should be at ```C:\umake.exe```
 
 You will love it. It works like a charm for me. 
 
+- http://tinyurl.com/umake12
+- http://tinyurl.com/ruby193win
 
 ## Sourcecode
 
@@ -66,8 +69,12 @@ Broadcast messages are prefixed with:
 
 - ELTMessage
 
+## Guidlines/Authoring
+
+Write code with whatever you like, but please no tab characters. 4 spaces per tab will do fine :)
 
 ## License
 
 GPL, GNU General Public License
 Version 3, 29 June 2007
+
