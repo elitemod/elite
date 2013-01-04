@@ -22,9 +22,10 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 25/12/2012 12:21:57 PM$
+ * @version $wotgreal_dt: 04.01.2013 3:35:33 $
  */
-class ELTMapMutator extends Mutator;
+class ELTMapMutator extends Mutator
+    HideDropDown;
 
 var name WeaponName[3];
 
