@@ -36,14 +36,18 @@ i can review them. Once i accept them into this repo the changes will be part of
 
 ## Building
 
-Since i have a strong web-background and usually work on a Mac i utilized Ruby-Make to create an easy 
-build script that helps preparing a release using **UMake**. There are one click packages out there that 
-will install the required "rake" console command on Windows. I used: ```rubyinstaller-1.9.3-p327.exe```
+Since i have a strong web-background i could not resist to utilize Ruby-Make to create an super easy 
+build script that helps preparing a release using **UMake**. It is not required, but i highly recommend
+you look into this. Packages are versioned and each release has to be a unique filename. The script does
+it all. There are one click packages out there that will install the required "rake" console command on
+your Windows machine. I used: ```rubyinstaller-1.9.3-p327.exe```
 
 With this installed just go into the source folder via commandline and type ```rake``` to start the 
 build. If you want to create a brandnew package just edit the "version.txt" and run "rake" again.
 
-For UMAKE to work your copy should be at ```C:\umake.exe```
+I also added a ```rakethis.bat``` so i just need to doubleclick and wait to compile a release version.
+
+To get UMake (v1.2 btw) to work with the script, your copy should be at ```C:\umake.exe```.
 
 You will love it. It works like a charm for me. 
 
@@ -69,6 +73,11 @@ Broadcast messages are prefixed with:
 
 - ELTMessage
 
+Everything player related is of course prefixed 
+
+- ELTPlayer -> PlayerController
+- ELTPlayerTeam -> TeamInfo
+
 ## Guidlines/Authoring
 
 Write code with whatever you like, but please no tab characters. 4 spaces per tab will do fine :)
@@ -77,4 +86,10 @@ Write code with whatever you like, but please no tab characters. 4 spaces per ta
 
 GPL, GNU General Public License
 Version 3, 29 June 2007
+
+
+## Download for Non-Coders
+
+Playable Downloads will be linked on the website of this mod: 
+http://elitemod.info
 
