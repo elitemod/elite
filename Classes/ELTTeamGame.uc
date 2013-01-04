@@ -29,7 +29,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 04.01.2013 3:38:42 $
+ * @version $wotgreal_dt: 04.01.2013 6:29:07 $
  */
 class ELTTeamGame extends xTeamGame
     Abstract
@@ -93,7 +93,6 @@ static function PrecacheGameAnnouncements(AnnouncerVoice V, bool bRewardSounds)
 
 /**
  * PostBeginPlay()
- * load our game rules.
  */
 event PostBeginPlay()
 {
@@ -113,20 +112,53 @@ event PostBeginPlay()
     }
 }
 
+/**
+ * NeedPlayers()
+ *
+ * Checks throughout the entire match if we have enough players.
+ * Minimum is 1v1. That is because the GetNextAttacker is a bit
+ * hackish as it depends on the precense of at least 1 person in
+ * the ELTPlayerTeam.Players array. Solution for now is to just spawn
+ * a bot and carry on.
+ */
+function bool NeedPlayers()
+{
+    local bool bNeedMore;
+    bNeedMore = super.NeedPlayers();
+
+    if (ELTPlayerTeam(Teams[0]).IsEmpty())
+        bNeedMore = true;
+
+    if (ELTPlayerTeam(Teams[1]).IsEmpty())
+        bNeedMore = true;
+
+    return bNeedMore;
+}
+
+/*
+ * StartMatch()
+ *
+ * Simple, we had a all bots/players restarted, lets pick an attacker and go!
+ */
 function StartMatch()
 {
     super.StartMatch();
-
     SelectNextAttacker();
 }
 
 /**
  * ScoreKill()
  *
- * this is the TDM version of Elite, so if attacker is dead, just spawn the next in line.
+ * This is the TDM version of Elite, so if attacker is dead, just spawn the next in line.
+ * Note that i made the class abstract after playing this solo, it does work, but it was
+ * not the goal of this mod. If there is demand for an DM type version, removing the Abstract
+ * flag might be the solution.
  */
 function ScoreKill(Controller Killer, Controller Other)
 {
+    if ( Killer == None && Other != None )
+        Killer = Other; // suicides, gibbed, crushed, etc.. killer is missing then.
+
     super.ScoreKill(Killer, Other);
 
     if ( CriticalPlayer(Other) )
