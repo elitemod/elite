@@ -22,7 +22,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 01/01/2013 10:41:46 PM$
+ * @version $wotgreal_dt: 04.01.2013 4:15:34 $
  */
 class ELTGame extends ELTRoundGame
     config;
@@ -147,7 +147,9 @@ DefaultProperties
 {
     Acronym="ELT"
     GameName="Elite Game"
-    MinNetPlayers=2
-
     GoalActivationTime=15
+    MinNetPlayers=2
+    MinPlayers=2
+    NumBots=2
+    InitialBots=1
 }
