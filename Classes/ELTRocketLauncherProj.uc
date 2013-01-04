@@ -20,7 +20,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage Weapons
- * @version $wotgreal_dt: 04.01.2013 1:56:28 $
+ * @version $wotgreal_dt: 04.01.2013 2:31:17 $
  */
 class ELTRocketLauncherProj extends RocketProj;
 
@@ -63,7 +63,7 @@ simulated function PostNetBeginPlay()
 
     if ( (GlowEffect != None) && (Instigator != None) )
     {
-        TeamNum = Instigator.Controller.GetTeamNum();
+        TeamNum = Instigator.GetTeamNum();
 
         if ( TeamNum == 0 ) {
             GlowEffect.MakeRed();
