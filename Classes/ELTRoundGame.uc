@@ -26,7 +26,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 04.01.2013 3:38:47 $
+ * @version $wotgreal_dt: 04.01.2013 6:14:50 $
  */
 class ELTRoundGame extends ELTTeamGame
     Abstract
@@ -307,6 +307,9 @@ function AnnounceScore( int ScoringTeam )
  */
 function ScoreKill(Controller Killer, Controller Other)
 {
+    if ( Killer == None && Other != None )
+        Killer = Other; // suicides, gibbed, crushed, etc.. killer is missing then.
+
     super(TeamGame).ScoreKill(Killer, Other); // ignore ELTTeamGame.
 }
 
