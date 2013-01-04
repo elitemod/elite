@@ -20,7 +20,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage Weapons
- * @version $wotgreal_dt: 02/01/2013 2:06:22 AM$
+ * @version $wotgreal_dt: 04.01.2013 1:41:49 $
  */
 class ELTRocketTrail extends Emitter;
 

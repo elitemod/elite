@@ -26,7 +26,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 02/01/2013 2:07:59 AM$
+ * @version $wotgreal_dt: 02/01/2013 2:11:32 AM$
  */
 class ELTRoundGame extends ELTTeamGame;
 

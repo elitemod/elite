@@ -20,7 +20,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage Weapons
- * @version $wotgreal_dt: 02/01/2013 1:56:28 AM$
+ * @version $wotgreal_dt: 04.01.2013 1:56:28 $
  */
 class ELTRocketLauncherProj extends RocketProj;
 
@@ -40,14 +40,29 @@ simulated function Destroyed()
 
 simulated function PostBeginPlay()
 {
-    local byte TeamNum;
-
     if ( Level.NetMode != NM_DedicatedServer) {
         GlowEffect = Spawn(class'EliteMod.ELTRocketTrail',self);
         Corona = Spawn(class'EliteMod.ELTRocketCorona',self);
     }
 
-    if ( GlowEffect != None ) {
+    super(Projectile).PostBeginPlay();
+}
+
+simulated function PostNetBeginPlay()
+{
+    local float dist;
+    local byte TeamNum;
+
+    Dir = vector(Rotation);
+    Velocity = speed * Dir;
+
+    if (PhysicsVolume.bWaterVolume) {
+        bHitWater = True;
+        Velocity=0.6*Velocity;
+    }
+
+    if ( (GlowEffect != None) && (Instigator != None) )
+    {
         TeamNum = Instigator.Controller.GetTeamNum();
 
         if ( TeamNum == 0 ) {
@@ -58,29 +73,15 @@ simulated function PostBeginPlay()
             GlowEffect.MakeBlue();
             LightHue=170;
         }
-    }
 
-    Dir = vector(Rotation);
-    Velocity = speed * Dir;
-    if (PhysicsVolume.bWaterVolume) {
-        bHitWater = True;
-        Velocity=0.6*Velocity;
-    }
-    super(Projectile).PostBeginPlay();
-}
-
-simulated function PostNetBeginPlay()
-{
-    local float dist;
-
-    if ( (GlowEffect != None) && (Instigator != None) && Instigator.IsLocallyControlled() )
-    {
-        if ( Role == ROLE_Authority )
-            GlowEffect.Delay(0.1);
-        else {
-            dist = VSize(Location - Instigator.Location);
-            if ( dist < 100 )
-                GlowEffect.Delay(0.1 - dist/1000);
+        if ( Instigator.IsLocallyControlled() ) {
+            if ( Role == ROLE_Authority )
+                GlowEffect.Delay(0.1);
+            else {
+                dist = VSize(Location - Instigator.Location);
+                if ( dist < 100 )
+                    GlowEffect.Delay(0.1 - dist/1000);
+            }
         }
     }
 }
