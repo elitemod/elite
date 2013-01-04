@@ -13,6 +13,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+// TODO: Play the "Denied" announcer if the attacker is killed while charging the GO! :)
+
 /**
  * ELTGame
  *
@@ -22,7 +24,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 04.01.2013 4:15:34 $
+ * @version $wotgreal_dt: 04.01.2013 6:33:09 $
  */
 class ELTGame extends ELTRoundGame
     config;
@@ -148,8 +150,4 @@ DefaultProperties
     Acronym="ELT"
     GameName="Elite Game"
     GoalActivationTime=15
-    MinNetPlayers=2
-    MinPlayers=2
-    NumBots=2
-    InitialBots=1
 }
