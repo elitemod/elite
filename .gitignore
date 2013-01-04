@@ -1,0 +1,16 @@
+*/
+
+############
+
+!EliteMod/
+!EliteMod/Classes/
+
+!EliteMapUtils/
+!EliteMapUtils/Classes/
+
+############
+Thumbs.db
+Desktop.ini
+.DS_Store
+.Spotlight-V100
+.Trashes
