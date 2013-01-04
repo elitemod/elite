@@ -26,9 +26,11 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 02/01/2013 2:11:32 AM$
+ * @version $wotgreal_dt: 04.01.2013 3:38:47 $
  */
-class ELTRoundGame extends ELTTeamGame;
+class ELTRoundGame extends ELTTeamGame
+    Abstract
+    HideDropDown;
 
 var int CurrentRound;
 var int RoundTimeLimit;
@@ -573,16 +575,15 @@ DefaultProperties
 {
     Acronym="ELT"
     GameName="Elite Roundbased Game"
-
-    bTeamScoreRounds=false
-
-    RoundTimeLimit=45
-    ResetTimeDelay=5
-    NumRounds=6
-
     HUDType="EliteMod.ELTRoundGameHUD"
+    bTeamScoreRounds=false  // score rounds, not kills
 
-    // sounds
+    // gameplay
+    NumRounds=6        // number of rounds per match
+    RoundTimeLimit=45  // total playable seconds per round
+    ResetTimeDelay=5   // countdown before next round
+
+    // announcers
     bSkipPlaySound=true
     DrawGameSound=Draw_Game
     NewRoundSound=New_assault_in

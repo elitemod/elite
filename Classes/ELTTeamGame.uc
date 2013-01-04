@@ -29,10 +29,12 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 01/01/2013 11:18:36 PM$
+ * @version $wotgreal_dt: 04.01.2013 3:38:42 $
  */
 class ELTTeamGame extends xTeamGame
-    config;
+    Abstract
+    HideDropDown
+    Config;
 
 var Array<ELTPlayerSpawnManager> SpawnManagers;
 var byte CurrentAttackingTeam, FirstAttackingTeam;
@@ -524,12 +526,9 @@ DefaultProperties
     MaxTeamSize=3
     MaxLives=1;
 
-    // testing with bots
-    MinPlayers=6
-    InitialBots=5
-
-    Acronym="ELT"
     GameName="Elite TeamGame"
+    Acronym="ELT"
+    MapPrefix="ELT"
 
     GoalScore=0
     ResetTimeDelay=5
@@ -553,7 +552,6 @@ DefaultProperties
     DefenderWeapon="EliteMod.ELTRocketLauncher"
     DefenderDamage=1
     DefenderHealth=1
-
 
     // classes
     PlayerControllerClassName="EliteMod.ELTPlayer"
