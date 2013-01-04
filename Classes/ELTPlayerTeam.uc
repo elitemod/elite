@@ -24,7 +24,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 25/12/2012 12:55:09 PM$
+ * @version $wotgreal_dt: 04.01.2013 6:16:23 $
  */
 class ELTPlayerTeam extends xTeamRoster;
 
@@ -115,23 +115,17 @@ function RemoveFromTeam(Controller Other)
  */
 function int GetNextAttacker()
 {
-    local int CurrentAttackerNum;
-
     if ( IsEmpty() ) {
-        NextAttackerNum = 0;
-        return -1;
+        return 0;
     }
 
-    if (NextAttackerNum >= Players.Length){
+    if ( NextAttackerNum >= Players.Length ) {
         NextAttackerNum = 0;
-    }
-
-    if ( Players[NextAttackerNum] != None ) {
-        CurrentAttackerNum = NextAttackerNum;
+    } else if ( Players[NextAttackerNum + 1] != None ) {
         NextAttackerNum++;
     }
 
-    return CurrentAttackerNum;
+    return NextAttackerNum;
 }
 
 defaultProperties
