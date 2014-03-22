@@ -1,7 +1,7 @@
 /**
  * This file is part of the "Elite" gametype modification for UT2004
  *
- * Copyright (C) 2012, m3nt0r <m3nt0r@elitemod.info>
+ * Copyright (C) 2012-2014, m3nt0r <m3nt0r.de@gmail.com>
  * http://elitemod.info
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 24/12/2012 9:19:04 PM$
+ * @version $wotgreal_dt: 22.03.2014 2:29:20 $
  */
 class ELTGameReplication extends GameReplicationInfo;
 
@@ -34,22 +34,22 @@ var bool bRoundInProgress;
 
 enum ERoundWinner
 {
-    ERW_None,
-    ERW_RedAttacked,
-    ERW_BlueAttacked,
-    ERW_RedDefended,
-    ERW_BlueDefended,
-    ERW_Draw,
+	ERW_None,
+	ERW_RedAttacked,
+	ERW_BlueAttacked,
+	ERW_RedDefended,
+	ERW_BlueDefended,
+	ERW_Draw,
 };
 var ERoundWinner RoundWinner;
 
 replication
 {
-    reliable if( bNetDirty && (Role == ROLE_Authority) ) // Variables the server should send to the client.
-        CurrentAttackingTeam, CurrentRound,
-        RoundTimeLimit, RoundElapsedTime, GoalActivationTime,
-        AttackingPlayerNum, RoundWinner,
-        bRoundInProgress;
+	reliable if( bNetDirty && (Role == ROLE_Authority) ) // Variables the server should send to the client.
+		CurrentAttackingTeam, CurrentRound,
+		RoundTimeLimit, RoundElapsedTime, GoalActivationTime,
+		AttackingPlayerNum, RoundWinner,
+		bRoundInProgress;
 }
 
 

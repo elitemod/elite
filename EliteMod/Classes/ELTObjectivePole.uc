@@ -1,8 +1,8 @@
 /**
  * This file is part of the "Elite" gametype modification for UT2004
  *
- * Copyright (C) 2012, m3nt0r <m3nt0r@elitemod.info>
- * http://elitemod.info
+ * Copyright (C) 2012-2014, m3nt0r <m3nt0r.de@gmail.com>
+ * http://elite2k4.wordpress.com/
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

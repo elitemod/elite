@@ -1,8 +1,8 @@
 /**
  * This file is part of the "Elite" gametype modification for UT2004
  *
- * Copyright (C) 2012, m3nt0r <m3nt0r@elitemod.info>
- * http://elitemod.info
+ * Copyright (C) 2012-2014, m3nt0r <m3nt0r.de@gmail.com>
+ * http://elite2k4.wordpress.com/
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,14 +22,14 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 02.02.2014 5:55:54 $
+ * @version $wotgreal_dt: 22.03.2014 3:03:09 $
  */
 class ELTGame extends ELTRoundGame
-    config;
+	config;
 
 var int GoalActivationTime; // if you set this to 5 the objective will
-                            // become "controllable" in the LAST 5 SECONDS
-                            // of the current round. ya dig? :)
+							// become "controllable" in the LAST 5 SECONDS
+							// of the current round. ya dig? :)
 
 
 // ============================================================================
@@ -42,8 +42,8 @@ var int GoalActivationTime; // if you set this to 5 the objective will
  */
 function ReplicateUpdatedGameInfo()
 {
-    super.ReplicateUpdatedGameInfo();
-    ELTGameReplication(GameReplicationInfo).GoalActivationTime = GoalActivationTime;
+	super.ReplicateUpdatedGameInfo();
+	ELTGameReplication(GameReplicationInfo).GoalActivationTime = GoalActivationTime;
 }
 
 /**
@@ -52,22 +52,22 @@ function ReplicateUpdatedGameInfo()
  */
 state MatchInProgress
 {
-    function Timer()
-    {
-        local int RemainingRoundTime;
+	function Timer()
+	{
+		local int RemainingRoundTime;
 
-        Super.Timer();
+		Super.Timer();
 
-        if ( bRoundInProgress ) {
-            RemainingRoundTime = GetRemainingRoundTime();
+		if ( bRoundInProgress ) {
+			RemainingRoundTime = GetRemainingRoundTime();
 
-            if ( RemainingRoundTime < (GoalActivationTime-1) && RemainingRoundTime > 0 )
-                BroadcastLocalizedMessage(class'EliteMod.ELTMessageRoundTime', RemainingRoundTime);
+			if ( RemainingRoundTime < (GoalActivationTime-1) && RemainingRoundTime > 0 )
+				BroadcastLocalizedMessage(class'EliteMod.ELTMessageRoundTime', RemainingRoundTime);
 
-            if ( RemainingRoundTime == GoalActivationTime )
-                TryActivateGameObjectives();
-        }
-    }
+			if ( RemainingRoundTime == GoalActivationTime )
+				TryActivateGameObjectives();
+		}
+	}
 }
 
 /**
@@ -76,16 +76,16 @@ state MatchInProgress
  */
 function bool CanDisableObjective( GameObjective GO )
 {
-    if ( !bRoundInProgress )
-        return false;
+	if ( !bRoundInProgress )
+		return false;
 
-    if ( GO.bBotOnlyObjective )
-        return true;
+	if ( GO.bBotOnlyObjective )
+		return true;
 
-    if ( ELTObjective(GO) == None )
-        return false;
+	if ( ELTObjective(GO) == None )
+		return false;
 
-    return ELTObjective(GO).IsControllable();
+	return ELTObjective(GO).IsControllable();
 }
 
 
@@ -96,47 +96,47 @@ function bool CanDisableObjective( GameObjective GO )
  */
 function bool TryActivateGameObjectives()
 {
-    local GameObjective GO;
-    local Controller    C, NextC;
-    local int           MessageStartIndex;
-    local bool          bDidActivateSomething;
+	local GameObjective GO;
+	local Controller    C, NextC;
+	local int           MessageStartIndex;
+	local bool          bDidActivateSomething;
 
-    if ( !GameReplicationInfo.bMatchHasBegun || bGameEnded || bWaitingToStartMatch || !bRoundInProgress )
-        return false;
+	if ( !GameReplicationInfo.bMatchHasBegun || bGameEnded || bWaitingToStartMatch || !bRoundInProgress )
+		return false;
 
-    // try activate any ELTObjectives in this map
-    bDidActivateSomething = false;
-    for ( GO=Teams[0].AI.Objectives; GO!=None; GO=GO.NextObjective ) {
-        if ( ELTObjective(GO) != None ) {
-            ELTObjective(GO).MakeControllable( CurrentAttackingTeam );
-            bDidActivateSomething = true;
-        }
-    }
+	// try activate any ELTObjectives in this map
+	bDidActivateSomething = false;
+	for ( GO=Teams[0].AI.Objectives; GO!=None; GO=GO.NextObjective ) {
+		if ( ELTObjective(GO) != None ) {
+			ELTObjective(GO).MakeControllable( CurrentAttackingTeam );
+			bDidActivateSomething = true;
+		}
+	}
 
-    // there is no point to announce something that did not happen.
-    if ( !bDidActivateSomething )
-        return false;
+	// there is no point to announce something that did not happen.
+	if ( !bDidActivateSomething )
+		return false;
 
-    // annouce to all players that the objective is now active and can be controlled
-    MessageStartIndex = 0;
-    C = Level.ControllerList;
-    while ( C != None )
-    {
-        NextC = C.NextController;
-        if ( C.PlayerReplicationInfo != None && PlayerController(C) != None )
-        {
-            if ( C.PlayerReplicationInfo.bOutOfLives || C.PlayerReplicationInfo.bOnlySpectator )
-                MessageStartIndex = 2;
+	// annouce to all players that the objective is now active and can be controlled
+	MessageStartIndex = 0;
+	C = Level.ControllerList;
+	while ( C != None )
+	{
+		NextC = C.NextController;
+		if ( C.PlayerReplicationInfo != None && PlayerController(C) != None )
+		{
+			if ( C.PlayerReplicationInfo.bOutOfLives || C.PlayerReplicationInfo.bOnlySpectator )
+				MessageStartIndex = 2;
 
-            if ( Super.IsAttackingTeam( C.GetTeamNum() ) )
-                PlayerController(C).ReceiveLocalizedMessage( class'EliteMod.ELTMessageObjective', MessageStartIndex, C.PlayerReplicationInfo);
-            else
-                PlayerController(C).ReceiveLocalizedMessage( class'EliteMod.ELTMessageObjective', MessageStartIndex + 1, C.PlayerReplicationInfo);
-        }
-        C = NextC;
-    }
+			if ( Super.IsAttackingTeam( C.GetTeamNum() ) )
+				PlayerController(C).ReceiveLocalizedMessage( class'EliteMod.ELTMessageObjective', MessageStartIndex, C.PlayerReplicationInfo);
+			else
+				PlayerController(C).ReceiveLocalizedMessage( class'EliteMod.ELTMessageObjective', MessageStartIndex + 1, C.PlayerReplicationInfo);
+		}
+		C = NextC;
+	}
 
-    return true;
+	return true;
 }
 
 // ============================================================================
@@ -145,10 +145,10 @@ function bool TryActivateGameObjectives()
 
 DefaultProperties
 {
-    Acronym="ELT"
-    GameName="Elite Game"
-    Description="3v3 round based game where each round one team has to attack the base of the other. Each round one sniper is picked. He has to eliminate the enemy or breach their defense and capture their objective."
-    MinNetPlayers=2
+	Acronym="ELT"
+	GameName="Elite Game"
+	Description="3v3 round based game where each round one team has to attack the base of the other. Each round one sniper is picked. He has to eliminate the enemy or breach their defense and capture their objective."
+	MinNetPlayers=2
 
-    GoalActivationTime=15
+	GoalActivationTime=15
 }
