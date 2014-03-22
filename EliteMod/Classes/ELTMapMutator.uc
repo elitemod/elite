@@ -22,10 +22,9 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 04.01.2013 5:31:06 $
+ * @version $wotgreal_dt: 02.02.2014 5:58:19 $
  */
-class ELTMapMutator extends Mutator
-    HideDropDown;
+class ELTMapMutator extends Mutator;
 
 var name WeaponName[3];
 
@@ -122,10 +121,10 @@ defaultproperties
     WeaponName[1]=ELTShockRifle
     WeaponName[2]=ELTLightning
 
-    GroupName="Elite"
+    GroupName="Arena"
     IconMaterialName="MutatorArt.nosym"
     FriendlyName="ELITE Map Mutator"
-    Description="Clean the level and replace stuff (used internally, leave it alone)."
+    Description="USED INTERNALLY. Clean the level from all items/pickups. Replace weapons with Elite weapons."
 
     RemoteRole=ROLE_SimulatedProxy
     bAlwaysRelevant=true

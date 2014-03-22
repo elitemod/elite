@@ -29,12 +29,10 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 04.01.2013 6:29:07 $
+ * @version $wotgreal_dt: 02.02.2014 6:58:22 $
  */
 class ELTTeamGame extends xTeamGame
-    Abstract
-    HideDropDown
-    Config;
+    config;
 
 var Array<ELTPlayerSpawnManager> SpawnManagers;
 var byte CurrentAttackingTeam, FirstAttackingTeam;
@@ -93,6 +91,7 @@ static function PrecacheGameAnnouncements(AnnouncerVoice V, bool bRewardSounds)
 
 /**
  * PostBeginPlay()
+ * load our game rules.
  */
 event PostBeginPlay()
 {
@@ -112,146 +111,82 @@ event PostBeginPlay()
     }
 }
 
-/**
- * NeedPlayers()
- *
- * Checks throughout the entire match if we have enough players.
- * Minimum is 1v1. That is because the GetNextAttacker is a bit
- * hackish as it depends on the precense of at least 1 person in
- * the ELTPlayerTeam.Players array. Solution for now is to just spawn
- * a bot and carry on.
- */
-function bool NeedPlayers()
-{
-    local bool bNeedMore;
-    bNeedMore = super.NeedPlayers();
-
-    if (ELTPlayerTeam(Teams[0]).IsEmpty())
-        bNeedMore = true;
-
-    if (ELTPlayerTeam(Teams[1]).IsEmpty())
-        bNeedMore = true;
-
-    return bNeedMore;
-}
-
-/*
- * StartMatch()
- *
- * Simple, we had a all bots/players restarted, lets pick an attacker and go!
- */
 function StartMatch()
 {
     super.StartMatch();
+
+    // GameReplicationInfo.bMatchHasBegun is now true
     SelectNextAttacker();
 }
 
-/**
- * ScoreKill()
- *
- * This is the TDM version of Elite, so if attacker is dead, just spawn the next in line.
- * Note that i made the class abstract after playing this solo, it does work, but it was
- * not the goal of this mod. If there is demand for an DM type version, removing the Abstract
- * flag might be the solution.
- */
-function ScoreKill(Controller Killer, Controller Other)
+event PlayerController Login
+(
+    string Portal,
+    string Options,
+    out string Error
+)
 {
-    if ( Killer == None && Other != None )
-        Killer = Other; // suicides, gibbed, crushed, etc.. killer is missing then.
+    local PlayerController NewPlayer;
+	local Controller C;
 
-    super.ScoreKill(Killer, Other);
+	if ( MaxLives > 0 )
+	{
+		// check that game isn't too far along
+		for ( C=Level.ControllerList; C!=None; C=C.NextController )
+		{
+			if ( (C.PlayerReplicationInfo != None) && (C.PlayerReplicationInfo.NumLives > LateEntryLives) )
+			{
+				Options = "?SpectatorOnly=1"$Options;
+				break;
+			}
+		}
+	}
 
-    if ( CriticalPlayer(Other) )
-    {
-        SelectNextAttacker();
-        RestartAttacker();
-    }
+    NewPlayer = Super.Login(Portal,Options,Error);
+    if ( bMustJoinBeforeStart && GameReplicationInfo.bMatchHasBegun )
+        UnrealPlayer(NewPlayer).bLatecomer = true;
+
+	if ( Level.NetMode == NM_Standalone )
+	{
+		if( NewPlayer.PlayerReplicationInfo.bOnlySpectator )
+		{
+			// Compensate for the space left for the player
+			if ( !bCustomBots && (bAutoNumBots || (bTeamGame && (InitialBots%2 == 1))) )
+				InitialBots++;
+		}
+		else
+			StandalonePlayer = NewPlayer;
+	}
+
+    return NewPlayer;
 }
 
 /**
- * CriticalPlayer()
+ * RestartPlayer()
  *
- * Returns true if passed Controller is the current Attacker (= critical)
- */
-function bool CriticalPlayer(Controller Other)
-{
-    return ((Other.PlayerReplicationInfo != None) && (Other == GetCurrentAttacker()));
-}
-
-/**
- * ReduceDamage()
+ * This differs from the "ELTTeamGame" version,
+ * by only respawning if there is no round in progress.
  *
- * Reduce WeaponDamage to 1 damage
- * Amplify velocity if self-damage with rocket launcher = rocketjump
+ * Without this bit, MaxLives=1 was rendered ineffective.
  */
-function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector HitLocation, out vector Momentum, class<DamageType> DamageType )
+function RestartPlayer( Controller C )
 {
-    Damage = super.ReduceDamage(Damage,Injured,InstigatedBy,HitLocation,Momentum,DamageType);
+    local Controller Attacker;
 
-    // attacker damage
-    if (ClassIsChildOf(DamageType, class'DamTypeSniperShot')
-      || ClassIsChildOf(DamageType, class'DamTypeSniperHeadShot')
-      || ClassIsChildOf(DamageType, class'DamTypeShockBeam'))
-    {
-        Damage = 0; // no damage unless it is an enemy
+    Log("RestartPlayer Player: "$C.PlayerReplicationInfo.PlayerName$" ("$C$") - Team: "$C.PlayerReplicationInfo.Team.GetHumanReadableName());
 
-        if ( InstigatedBy != None && InstigatedBy.Controller != None )
-            if ( Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum() ) {
-                Damage = AttackerDamage;
-                AnnounceShotDistance(InstigatedBy.Controller, HitLocation);
+    if ( GameReplicationInfo.bMatchHasBegun ) {
+        // after start match, make sure only the attacker lives
+
+        if ( IsAttackingTeam( C.PlayerReplicationInfo.Team.TeamIndex ) ) {
+            Attacker = GetCurrentAttacker();
+            if ( C != Attacker ) {
+                // non-attacker has to sit out.
+                C.PlayerReplicationInfo.NumLives = MaxLives;
+                C.PlayerReplicationInfo.bOutOfLives = true;
+                C.GotoState('Dead');
             }
-    }
-    // defender damage
-    else if (ClassIsChildOf(DamageType, class'DamTypeRocket'))
-    {
-        Damage = 0; // no damage unless it is an enemy
-
-        if ( InstigatedBy != None && InstigatedBy.Controller != None )
-            if (Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum()) {
-                Damage = DefenderDamage;
-            }
-    }
-    else if (ClassIsChildOf(DamageType, class'Crushed')) {
-        // no crush damage by other teammates.
-        if ( InstigatedBy != None && InstigatedBy.Controller != None )
-            if (Injured.Controller.GetTeamNum() == InstigatedBy.Controller.GetTeamNum())
-                Damage = 0;
-    }
-    else if (ClassIsChildOf(DamageType, class'Fell')) {
-        // no falling damage.
-        Damage = 0;
-    }
-
-    return Damage;
-}
-
-/**
- * AnnounceShotDistance()
- * Brodcast special event message to insitigator
- */
-function AnnounceShotDistance(Controller Instigator, Vector HitLocation)
-{
-    local int DistanceInMeters;
-
-    DistanceInMeters = int( VSize( HitLocation - Instigator.Pawn.Location ) * 0.01875.f );
-
-    if ( PlayerController(Instigator) != None )
-        PlayerController(Instigator).ReceiveLocalizedMessage(class'EliteMod.ELTMessageDistance', DistanceInMeters);
-}
-
-/**
- * RestartPlayer
- */
-function RestartPlayer(Controller C)
-{
-    if ( IsAttackingTeam ( C.GetTeamNum() ) ) {
-        if ( C != GetCurrentAttacker() ) {
-            C.PlayerReplicationInfo.NumLives = 0;
-            C.PlayerReplicationInfo.bOutOfLives = true;
         }
-    } else {
-        C.PlayerReplicationInfo.NumLives = 1;
-        C.PlayerReplicationInfo.bOutOfLives = false;
     }
 
     Super.RestartPlayer(C);
@@ -268,186 +203,13 @@ function bool RestartAttacker()
 
     Attacker = GetCurrentAttacker();
     if ( (Attacker != None) && (Attacker.PlayerReplicationInfo != None) ) {
-        Attacker.PlayerReplicationInfo.NumLives = 1;
+        Attacker.PlayerReplicationInfo.NumLives = 0;
         Attacker.PlayerReplicationInfo.bOutOfLives = false;
         RestartPlayer( Attacker );
         return true;
     }
 
     return false;
-}
-
-/**
- * SpawnBot()
- *
- * Spawn and initialize a bot. Overwritten to spawn an 'ELTBot' instead of 'default.xBot', because
- * we want Bots to use our ELTPawn, not xPawn. I haven't found a nicer way to replace this.
- */
-function Bot SpawnBot(optional string botName)
-{
-    local Bot NewBot;
-    local RosterEntry Chosen;
-    local UnrealTeamInfo BotTeam;
-
-    BotTeam = GetBotTeam(); // ELTPlayerTeam
-    Chosen = BotTeam.ChooseBotClass(botName);
-    if (Chosen.PawnClass == None)
-        Chosen.Init();
-
-    NewBot = Spawn(class'EliteMod.ELTBot');
-    if ( NewBot != None )
-        InitializeBot(NewBot,BotTeam,Chosen);
-
-    return NewBot;
-}
-
-/**
- * InitializeBot()
- *
- * This was overwritten to increase the difficulty and skill on all bots.
- */
-function InitializeBot(Bot NewBot, UnrealTeamInfo BotTeam, RosterEntry Chosen)
-{
-    super.InitializeBot(NewBot, BotTeam, Chosen);
-
-/*
-    // supernasty bots
-    NewBot.Accuracy = 1;
-    NewBot.StrafingAbility = 1;
-    NewBot.Tactics = 1;
-    NewBot.InitializeSkill(AdjustedDifficulty+2);
-*/
-}
-
-/**
- * CheckScore()
- * Usually runs testing code, but in this mode we just check if time's up.
- */
-function CheckScore(PlayerReplicationInfo Scorer)
-{
-    if ( (Scorer != None) && bOverTime )
-        EndGame(Scorer,"timelimit");
-}
-
-/**
- * IsAttackingTeam()
- *
- * Check if given TeamNumber is currently attacking
- */
-function bool IsAttackingTeam(int TeamNumber)
-{
-    return ( TeamNumber == CurrentAttackingTeam );
-}
-
-/**
- * AddGameSpecificInventory()
- *
- * Give the PRI weapons and health based on his role.
- * We ask the GRI to tell us if his pawns controller team is on defense.
- */
-function AddGameSpecificInventory(Pawn P)
-{
-    Super.AddGameSpecificInventory(P);
-
-    if (P == none || P.Controller == none )
-        return;
-
-    if ( IsAttackingTeam ( P.Controller.GetTeamNum() ) ) {
-        P.CreateInventory( AttackerWeapon );
-        P.Health = AttackerHealth;
-        P.HealthMax = AttackerHealth;
-    } else {
-        P.CreateInventory( DefenderWeapon );
-        P.Health = DefenderHealth;
-        P.HealthMax = DefenderHealth;
-    }
-
-    P.NextWeapon();
-}
-
-
-/**
- * SelectNextAttacker()
- * Shortcut to CurrentAttackingTeam...GetNextAttacker()
- *
- * Assigns "AttackingPlayerNum" so we gotta replicate after this to make sure
- * everyone knows who has been chosen.
- */
-function SelectNextAttacker()
-{
-    local ELTPlayerTeam AttackingTeam;
-
-    AttackingTeam = ELTPlayerTeam(Teams[CurrentAttackingTeam]);
-    AttackingPlayerNum = AttackingTeam.GetNextAttacker();
-
-    // replicate
-    ELTGameReplication(GameReplicationInfo).AttackingPlayerNum = AttackingPlayerNum;
-    ELTGameReplication(GameReplicationInfo).NetUpdateTime = Level.TimeSeconds - 1;
-
-    // tell others
-    Level.Game.Broadcast(self, GetAttackerName()@"is attacking.");
-    Log("### > "@GetAttackerName()@"is attacking.");
-}
-
-/**
- * GetCurrentAttacker()
- * Based on the current indexes, read the controller from the TeamInfo players array
- */
-function Controller GetCurrentAttacker()
-{
-    local ELTPlayerTeam AttackingTeam;
-
-    AttackingTeam = ELTPlayerTeam(Teams[CurrentAttackingTeam]);
-
-    if ( AttackingTeam == None )
-        return None;
-
-    return AttackingTeam.Players[AttackingPlayerNum];
-}
-
-/**
- * GetAttackerName()
- * Usually just used for debug, returns the attackers player name
- */
-function string GetAttackerName()
-{
-    local Controller Attacker;
-
-    Attacker = GetCurrentAttacker();
-
-    if ( Attacker == None )
-        return "Unknown";
-
-    if ( Attacker.PlayerReplicationInfo == None )
-        return "Unknown";
-
-    return Attacker.PlayerReplicationInfo.GetHumanReadableName();
-}
-
-/**
- * GetDefenderNum()
- *
- * Native function from GameInfo.
- * Properly return our defending teamindex
- */
-function int GetDefenderNum()
-{
-    return (1 - CurrentAttackingTeam);
-}
-
-/**
- * QueueAnnouncerSound()
- * Wrapper for PC:QueueAnnouncement, taking team affiliation into account
- */
-function QueueAnnouncerSound(name ASound, byte AnnouncementLevel, byte Team, optional AnnouncerQueueManager.EAPriority Priority, optional byte Switch )
-{
-    local Controller C;
-    if ( (ASound != '') ) {
-        for ( C=Level.ControllerList; C!=None; C=C.NextController ) {
-            if ( C.IsA('PlayerController') && ((Team==255) || (C.GetTeamNum()==Team)) )
-                PlayerController(C).QueueAnnouncement( ASound, AnnouncementLevel, Priority, switch );
-        }
-    }
 }
 
 /**
@@ -548,6 +310,274 @@ function float RatePlayerStart(NavigationPoint N, byte Team, Controller Player)
     return -9000000;
 }
 
+/**
+ * SpawnBot()
+ *
+ * Spawn and initialize a bot. Overwritten to spawn an 'ELTBot' instead of 'default.xBot', because
+ * we want Bots to use our ELTPawn, not xPawn. I haven't found a nicer way to replace this.
+ */
+function Bot SpawnBot(optional string botName)
+{
+    local Bot NewBot;
+    local RosterEntry Chosen;
+    local UnrealTeamInfo BotTeam;
+
+    BotTeam = GetBotTeam(); // ELTPlayerTeam
+    Chosen = BotTeam.ChooseBotClass(botName);
+    if (Chosen.PawnClass == None)
+        Chosen.Init();
+
+    NewBot = Spawn(class'EliteMod.ELTBot');
+    if ( NewBot != None )
+        InitializeBot(NewBot,BotTeam,Chosen);
+
+    return NewBot;
+}
+
+/**
+ * InitializeBot()
+ *
+ * This was overwritten to increase the difficulty and skill on all bots.
+ */
+function InitializeBot(Bot NewBot, UnrealTeamInfo BotTeam, RosterEntry Chosen)
+{
+    super.InitializeBot(NewBot, BotTeam, Chosen);
+
+/*
+    // supernasty bots
+
+    NewBot.Accuracy = 1;
+    NewBot.StrafingAbility = 1;
+    NewBot.Tactics = 1;
+    NewBot.InitializeSkill(AdjustedDifficulty+2);
+*/
+}
+
+/**
+ * CheckScore()
+ * Usually runs testing code, but in this mode we just check if time's up.
+ */
+function CheckScore(PlayerReplicationInfo Scorer)
+{
+    if ( (Scorer != None) && bOverTime )
+        EndGame(Scorer,"timelimit");
+}
+
+/**
+ * IsAttackingTeam()
+ *
+ * Check if given TeamNumber is currently attacking
+ */
+function bool IsAttackingTeam(int TeamNumber)
+{
+    return ( TeamNumber == CurrentAttackingTeam );
+}
+
+/**
+ * AddGameSpecificInventory()
+ *
+ * Give the PRI weapons and health based on his role.
+ * We ask the GRI to tell us if his pawns controller team is on defense.
+ */
+function AddGameSpecificInventory(Pawn P)
+{
+    Super.AddGameSpecificInventory(P);
+
+    if (P == none || P.Controller == none )
+        return;
+
+    if ( IsAttackingTeam ( P.Controller.GetTeamNum() ) ) {
+        P.CreateInventory( AttackerWeapon );
+        P.Health = AttackerHealth;
+        P.HealthMax = AttackerHealth;
+    } else {
+        P.CreateInventory( DefenderWeapon );
+        P.Health = DefenderHealth;
+        P.HealthMax = DefenderHealth;
+    }
+
+    P.NextWeapon();
+}
+
+
+/**
+ * SelectNextAttacker()
+ * Shortcut to CurrentAttackingTeam...GetNextAttacker()
+ *
+ * Assigns "AttackingPlayerNum" so we gotta replicate after this to make sure
+ * everyone knows who has been chosen.
+ */
+function SelectNextAttacker()
+{
+    local ELTPlayerTeam AttackingTeam;
+
+    AttackingTeam = ELTPlayerTeam(Teams[CurrentAttackingTeam]);
+    AttackingPlayerNum = AttackingTeam.GetNextAttacker();
+
+    // replicate
+    ELTGameReplication(GameReplicationInfo).AttackingPlayerNum = AttackingPlayerNum;
+    ELTGameReplication(GameReplicationInfo).NetUpdateTime = Level.TimeSeconds - 1;
+
+    // tell others
+    Level.Game.Broadcast(self, GetAttackerName()@"is attacking.");
+    Log("### > "@GetAttackerName()@"is attacking.");
+}
+
+/**
+ * GetCurrentAttacker()
+ * Based on the current indexes, read the controller from the TeamInfo players array
+ */
+function Controller GetCurrentAttacker()
+{
+    local ELTPlayerTeam AttackingTeam;
+
+    AttackingTeam = ELTPlayerTeam(Teams[CurrentAttackingTeam]);
+
+    if ( AttackingTeam == none || AttackingTeam.Players.Length == 0 )
+        return None;
+
+    return AttackingTeam.Players[AttackingPlayerNum];
+}
+
+/**
+ * GetAttackerName()
+ * Usually just used for debug, returns the attackers player name
+ */
+function string GetAttackerName()
+{
+    local Controller Attacker;
+
+    Attacker = GetCurrentAttacker();
+
+    if ( Attacker == None )
+        return "Unknown";
+
+    if ( Attacker.PlayerReplicationInfo == None )
+        return "Unknown";
+
+    return Attacker.PlayerReplicationInfo.GetHumanReadableName();
+}
+
+/**
+ * GetDefenderNum()
+ *
+ * Native function from GameInfo.
+ * Properly return our defending teamindex to support other mods (perhaps AI)
+ */
+function int GetDefenderNum()
+{
+    return (1 - CurrentAttackingTeam);
+}
+
+
+
+/**
+ * ScoreKill()
+ *
+ * this is the TDM version of Elite, so if attacker is dead, just spawn the next in line.
+ */
+function ScoreKill(Controller Killer, Controller Other)
+{
+    super.ScoreKill(Killer, Other);
+
+    if ( Other != None && Other.PlayerReplicationInfo != None ) {
+
+        Other.PlayerReplicationInfo.NumLives = 0;
+        Other.PlayerReplicationInfo.bOutOfLives = false;
+
+        if ( CriticalPlayer(Other) ) {
+            SelectNextAttacker();
+            RestartAttacker();
+        }
+    }
+}
+
+/**
+ * CriticalPlayer()
+ *
+ * Returns true if passed Controller is the current Attacker (= critical)
+ */
+function bool CriticalPlayer(Controller Other)
+{
+    return ((Other.PlayerReplicationInfo != None) && (Other == GetCurrentAttacker()));
+}
+
+/**
+ * ReduceDamage()
+ *
+ * Reduce WeaponDamage to 1 damage
+ * Amplify velocity if self-damage with rocket launcher = rocketjump
+ */
+function int ReduceDamage( int Damage, pawn injured, pawn instigatedBy, vector HitLocation, out vector Momentum, class<DamageType> DamageType )
+{
+    Damage = super.ReduceDamage(Damage,Injured,InstigatedBy,HitLocation,Momentum,DamageType);
+
+    // attacker damage
+    if (ClassIsChildOf(DamageType, class'DamTypeSniperShot')
+      || ClassIsChildOf(DamageType, class'DamTypeSniperHeadShot')
+      || ClassIsChildOf(DamageType, class'DamTypeShockBeam'))
+    {
+        Damage = 0; // no damage unless it is an enemy
+
+        if ( InstigatedBy != None && InstigatedBy.Controller != None )
+            if ( Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum() ) {
+                Damage = AttackerDamage;
+                AnnounceShotDistance(InstigatedBy.Controller, HitLocation);
+            }
+    }
+    // defender damage
+    else if (ClassIsChildOf(DamageType, class'DamTypeRocket'))
+    {
+        Damage = 0; // no damage unless it is an enemy
+
+        if ( InstigatedBy != None && InstigatedBy.Controller != None )
+            if (Injured.Controller.GetTeamNum() != InstigatedBy.Controller.GetTeamNum()) {
+                Damage = DefenderDamage;
+            }
+    }
+    else if (ClassIsChildOf(DamageType, class'Crushed')) {
+        // no crush damage by other teammates.
+        if ( InstigatedBy != None && InstigatedBy.Controller != None )
+            if (Injured.Controller.GetTeamNum() == InstigatedBy.Controller.GetTeamNum())
+                Damage = 0;
+    }
+    else if (ClassIsChildOf(DamageType, class'Fell')) {
+        // no falling damage.
+        Damage = 0;
+    }
+
+    return Damage;
+}
+
+/**
+ * AnnounceShotDistance()
+ * Brodcast special event message to insitigator
+ */
+function AnnounceShotDistance(Controller Instigator, Vector HitLocation)
+{
+    local int DistanceInMeters;
+
+    DistanceInMeters = int( VSize( HitLocation - Instigator.Pawn.Location ) * 0.01875.f );
+
+    if ( PlayerController(Instigator) != None )
+        PlayerController(Instigator).ReceiveLocalizedMessage(class'EliteMod.ELTMessageDistance', DistanceInMeters);
+}
+
+/**
+ * QueueAnnouncerSound()
+ * Wrapper for PC:QueueAnnouncement, taking team affiliation into account
+ */
+function QueueAnnouncerSound(name ASound, byte AnnouncementLevel, byte Team, optional AnnouncerQueueManager.EAPriority Priority, optional byte Switch )
+{
+    local Controller C;
+    if ( (ASound != '') ) {
+        for ( C=Level.ControllerList; C!=None; C=C.NextController ) {
+            if ( C.IsA('PlayerController') && ((Team==255) || (C.GetTeamNum()==Team)) )
+                PlayerController(C).QueueAnnouncement( ASound, AnnouncementLevel, Priority, switch );
+        }
+    }
+}
+
 
 // ============================================================================
 // Defaults
@@ -558,19 +588,28 @@ DefaultProperties
     MaxTeamSize=3
     MaxLives=1;
 
-    GameName="Elite TeamGame"
+    // testing with bots
+    MinPlayers=6
+    InitialBots=5
+    bAutoNumBots=true
+
     Acronym="ELT"
-    MapPrefix="ELT"
+    GameName="Elite TeamGame"
+    Description="TDM variant of Elite. One goes in versus 3 enemies. If he dies, the next team mate gets his chance to kill the other team."
 
     GoalScore=0
     ResetTimeDelay=5
     SpawnProtectionTime=0
     FriendlyFireScale=0.000000
+    RestartWait=10
 
+    bForceRespawn=true
+    bAllowBehindView=false
     bScoreTeamKills=false
     bSpawnInTeamArea=true
     bPlayersBalanceTeams=false
     bPlayersMustBeReady=true
+    bMustJoinBeforeStart=true
     bWeaponShouldViewShake=false
     bBalanceTeams=true
     bWeaponStay=true
@@ -584,6 +623,7 @@ DefaultProperties
     DefenderWeapon="EliteMod.ELTRocketLauncher"
     DefenderDamage=1
     DefenderHealth=1
+
 
     // classes
     PlayerControllerClassName="EliteMod.ELTPlayer"

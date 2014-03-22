@@ -24,7 +24,7 @@
  *
  * @author m3nt0r
  * @package Elite
- * @version $wotgreal_dt: 04.01.2013 6:16:23 $
+ * @version $wotgreal_dt: 02.02.2014 4:37:09 $
  */
 class ELTPlayerTeam extends xTeamRoster;
 
@@ -41,7 +41,7 @@ var int NextAttackerNum, NumPlayers;
 
 replication
 {
-    reliable if (bNetDirty && Role == ROLE_Authority)
+    reliable if (Role == ROLE_Authority)
         Players, NextAttackerNum, NumPlayers;
 }
 
@@ -49,11 +49,18 @@ replication
 // Implementation
 // ============================================================================
 
+/**
+ * Convenience method: Check if NumPlayers is zero
+ */
 function bool IsEmpty()
 {
     return (NumPlayers == 0);
 }
 
+/**
+ * Check if at least one PRI of this team IS NOT out-of-lives.
+ * Also returns false if the team is empty.
+ */
 function bool HasOneAlive()
 {
     local int i;
@@ -66,10 +73,11 @@ function bool HasOneAlive()
             if ( Players[i].PlayerReplicationInfo != none ) {
                 if ( !Players[i].PlayerReplicationInfo.bOutOfLives ) {
                     return true;
-                }
-            }
-        }
-    }
+                } // not outoflives
+            } // has PRI
+        } // has value
+    } // end loop
+
     return false;
 }
 
@@ -95,7 +103,7 @@ function bool AddToTeam( Controller Other )
  * Search the Players array for Controller.
  * Remove if found, call parent method and decrease NumPlayers by 1
  */
-function RemoveFromTeam(Controller Other)
+function RemoveFromTeam( Controller Other )
 {
     local int i;
 
@@ -115,18 +123,28 @@ function RemoveFromTeam(Controller Other)
  */
 function int GetNextAttacker()
 {
+    local int CurrentAttackerNum;
+
     if ( IsEmpty() ) {
-        return 0;
+        NextAttackerNum = 0;
+        return -1;
     }
 
-    if ( NextAttackerNum >= Players.Length ) {
+    if (NextAttackerNum >= Players.Length){
         NextAttackerNum = 0;
-    } else if ( Players[NextAttackerNum + 1] != None ) {
+    }
+
+    if ( Players[NextAttackerNum] != None ) {
+        CurrentAttackerNum = NextAttackerNum;
         NextAttackerNum++;
     }
 
-    return NextAttackerNum;
+    return CurrentAttackerNum;
 }
+
+// ============================================================================
+// Properties
+// ============================================================================
 
 defaultProperties
 {

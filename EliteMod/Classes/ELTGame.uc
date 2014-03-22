@@ -13,8 +13,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-// TODO: Play the "Denied" announcer if the attacker is killed while charging the GO! :)
-
 /**
  * ELTGame
  *
@@ -24,7 +22,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 04.01.2013 6:33:09 $
+ * @version $wotgreal_dt: 02.02.2014 5:55:54 $
  */
 class ELTGame extends ELTRoundGame
     config;
@@ -149,5 +147,8 @@ DefaultProperties
 {
     Acronym="ELT"
     GameName="Elite Game"
+    Description="3v3 round based game where each round one team has to attack the base of the other. Each round one sniper is picked. He has to eliminate the enemy or breach their defense and capture their objective."
+    MinNetPlayers=2
+
     GoalActivationTime=15
 }

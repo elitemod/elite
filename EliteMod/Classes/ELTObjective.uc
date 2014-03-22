@@ -32,7 +32,7 @@
  * @author m3nt0r
  * @package Elite
  * @package Objective
- * @version $wotgreal_dt: 04.01.2013 5:42:38 $
+ * @version $wotgreal_dt: 25/12/2012 12:20:03 PM$
  */
 class ELTObjective extends GameObjective;
 
@@ -70,13 +70,9 @@ replication
 // Implementation
 // ============================================================================
 
-/**
- * MakeControllable()
- * This method is called by the gameinfo timer once the goal activation time has
- * been reached.
- */
 function MakeControllable( int CurrentAttackingTeam )
 {
+    Log("--- MakeControllable ---");
     SetTeam( 1 - CurrentAttackingTeam );
     HighlightPhysicalObjective( true );
     ApplyColoring( 1 - CurrentAttackingTeam );
@@ -84,26 +80,19 @@ function MakeControllable( int CurrentAttackingTeam )
     GotoState('Controllable');
 }
 
-/**
- * Reset()
- * Cleanup the objective, back to PostBeginPlay
- */
 simulated function Reset()
 {
     FlagIdle();
-    GotoState('Idle');
     ApplyColoring(255);
     ChargedAmount = 0;
     super.Reset();
 }
 
-/**
- * PostBeginPlay()
- * Setup initial objective visuals
- */
 simulated function PostBeginPlay()
 {
     Super.PostBeginPlay();
+
+    ChargedAmount = 0;
 
     if ( (Level.NetMode != NM_Client) && !Level.Game.IsA('ELTTeamGame') )  {
         bHidden = true;
@@ -115,8 +104,7 @@ simulated function PostBeginPlay()
         Pole = spawn(class'EliteMod.ELTObjectivePole',self,,Location);
         Ring = Spawn(class'XGame.xDomRing',self,,Location+Vect(0,0,860),Rotation);
 
-        // start by resetting
-        Reset();
+        ApplyColoring( DefenderTeamIndex );
 
         // start timer
         SetTimer(ChargeTickTime, true);
@@ -276,18 +264,6 @@ state Controllable
 
 state Captured
 {
-    simulated event Tick(float DeltaTime)
-    {
-    }
-
-    function Touch(Actor Other)
-    {
-    }
-
-    function UnTouch(Actor Other)
-    {
-    }
-
     function Timer()
     {
         SetTimer(0,false);
@@ -302,7 +278,6 @@ state Captured
         // trigger "END ROUND"
         ELTGame(Level.Game).EndRound(ERER_PoleTapped, ChargingPawn, "fully_charged");
     }
-
 }
 // ============================================================================
 // States: Initial Idle State
@@ -310,22 +285,10 @@ state Captured
 
 auto state Idle
 {
-    simulated event Tick(float DeltaTime)
-    {
-    }
-
-    function Touch(Actor Other)
-    {
-    }
-
-    function UnTouch(Actor Other)
-    {
-    }
-
     function Timer()
     {
+        // do nothing
     }
-
 }
 
 // ============================================================================

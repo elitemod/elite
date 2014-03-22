@@ -20,7 +20,7 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage Weapons
- * @version $wotgreal_dt: 04.01.2013 2:31:17 $
+ * @version $wotgreal_dt: 29.01.2014 4:31:23 $
  */
 class ELTRocketLauncherProj extends RocketProj;
 
@@ -45,43 +45,39 @@ simulated function PostBeginPlay()
         Corona = Spawn(class'EliteMod.ELTRocketCorona',self);
     }
 
+    Dir = vector(Rotation);
+    Velocity = speed * Dir;
+    if (PhysicsVolume.bWaterVolume) {
+        bHitWater = True;
+        Velocity=0.6*Velocity;
+    }
     super(Projectile).PostBeginPlay();
 }
 
 simulated function PostNetBeginPlay()
 {
     local float dist;
-    local byte TeamNum;
 
-    Dir = vector(Rotation);
-    Velocity = speed * Dir;
+    if ( (GlowEffect != None) && (Instigator != None) && (Instigator.PlayerReplicationInfo.Team != None) ) {
 
-    if (PhysicsVolume.bWaterVolume) {
-        bHitWater = True;
-        Velocity=0.6*Velocity;
-    }
-
-    if ( (GlowEffect != None) && (Instigator != None) )
-    {
-        TeamNum = Instigator.GetTeamNum();
-
-        if ( TeamNum == 0 ) {
+        if ( Instigator.PlayerReplicationInfo.Team.TeamIndex == 0 ) {
             GlowEffect.MakeRed();
             LightHue=255;
         }
-        else if ( TeamNum == 1 ) {
+        else if ( Instigator.PlayerReplicationInfo.Team.TeamIndex == 1 ) {
             GlowEffect.MakeBlue();
             LightHue=170;
         }
+    }
 
-        if ( Instigator.IsLocallyControlled() ) {
-            if ( Role == ROLE_Authority )
-                GlowEffect.Delay(0.1);
-            else {
-                dist = VSize(Location - Instigator.Location);
-                if ( dist < 100 )
-                    GlowEffect.Delay(0.1 - dist/1000);
-            }
+    if ( (GlowEffect != None) && (Instigator != None) && Instigator.IsLocallyControlled() )
+    {
+        if ( Role == ROLE_Authority )
+            GlowEffect.Delay(0.1);
+        else {
+            dist = VSize(Location - Instigator.Location);
+            if ( dist < 100 )
+                GlowEffect.Delay(0.1 - dist/1000);
         }
     }
 }

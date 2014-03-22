@@ -19,9 +19,10 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage Controllers
- * @version $wotgreal_dt: 25/12/2012 1:13:34 PM$
+ * @version $wotgreal_dt: 02.02.2014 7:09:22 $
  */
 class ELTPlayer extends xPlayer;
+
 
 // ============================================================================
 // Implementation
@@ -36,6 +37,7 @@ function SetPawnClass(string inClass, string inCharacter)
     if ( inClass != "" ) {
         inClass = "EliteMod.ELTPawn";
     }
+
     super.SetPawnClass(inClass, inCharacter);
 }
 
@@ -53,6 +55,43 @@ exec function Suicide() {
 
     if ( ELTGame(Level.Game).GetCurrentAttacker() == self )
         ELTGame(Level.Game).EndRound(ERER_AttackerDead, Pawn, "attacker_suicided");
+}
+
+/**
+ * Overwrite spectator behavior
+ *
+ * if this is an elite game (should be) and this PC is in the attacking team,
+ * force him to watch the current-attacking controller and nothing else!
+ *
+ */
+function ServerViewNextPlayer()
+{
+    local Controller Attacker;
+	local ELTTeamGame Elite;
+
+    Elite = ELTTeamGame(Level.Game);
+    if ((Elite != None) && Elite.IsAttackingTeam(PlayerReplicationInfo.Team.TeamIndex))
+    {
+        // view current attack only!!
+        Attacker = Elite.GetCurrentAttacker();
+        if (Attacker != None) {
+            SetViewTarget(Attacker);
+            ClientSetViewTarget(Attacker);
+            return;
+        }
+    }
+
+    super.ServerViewNextPlayer();
+}
+
+/**
+ * Do not allow to view from self (free cam over the entire map) in spec.
+ */
+function ServerViewSelf()
+{
+    if ( (ELTTeamGame(Level.Game) != None) && bIsPlayer ) {
+        ServerViewNextPlayer();
+    }
 }
 
 // ============================================================================

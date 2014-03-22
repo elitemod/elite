@@ -26,11 +26,9 @@
  * @author m3nt0r
  * @package Elite
  * @subpackage GameInfo
- * @version $wotgreal_dt: 04.01.2013 6:14:50 $
+ * @version $wotgreal_dt: 02.02.2014 7:10:18 $
  */
-class ELTRoundGame extends ELTTeamGame
-    Abstract
-    HideDropDown;
+class ELTRoundGame extends ELTTeamGame;
 
 var int CurrentRound;
 var int RoundTimeLimit;
@@ -209,6 +207,7 @@ function EndRound(ERER_Reason RoundEndReason, Pawn Instigator, String Reason)
     // Increase Team Score
     Teams[ScoringTeam].Score += 1.0;
     Teams[ScoringTeam].NetUpdateTime = Level.TimeSeconds - 1;
+
     TeamScoreEvent(ScoringTeam, 1, "endround_scoring_team");
     AnnounceScore(ScoringTeam);
     ReplicateUpdatedGameInfo();
@@ -216,8 +215,8 @@ function EndRound(ERER_Reason RoundEndReason, Pawn Instigator, String Reason)
     Log("---------------------------------------------- EndRound");
     Log("  EndRound Reason: "@Reason);
     if ( Instigator != None )
-        Log("  Scoring Instigator: "@Instigator.GetHumanReadableName()$", Team:"@Instigator.GetTeamNum());
-    Log("  Scoring Team is: "@ScoringTeam);
+        Log("  Scoring Instigator: "@Instigator.GetHumanReadableName()$", Team:"@Teams[Instigator.GetTeamNum()].GetHumanReadableName());
+    Log("  Scoring Team is: "@Teams[ScoringTeam].GetHumanReadableName());
     Log("  Scoring was attacking: "@IsAttackingTeam(ScoringTeam));
     Log("  New Team Score: "@GameReplicationInfo.Teams[ScoringTeam].Score );
 
@@ -270,7 +269,9 @@ function CheckScore(PlayerReplicationInfo Scorer)
     }
 }
 
-
+/**
+ * Play sounds like "succecssfully attacked", etc.
+ */
 function AnnounceScore( int ScoringTeam )
 {
     local name ScoreSound;
@@ -301,16 +302,25 @@ function AnnounceScore( int ScoringTeam )
 /**
  * ScoreKill()
  *
- * Since this is a roundbased variant of the TDM version,
- * we use the ELTTeamGame parent "TeamGame" version and skip
- * the manual Attacker restart.
+ * In the round-based non-TDM version of Elite we honor the MaxLives and
+ * set bOutOfLives once the player used all lives (usually just 1 per round)
  */
 function ScoreKill(Controller Killer, Controller Other)
 {
-    if ( Killer == None && Other != None )
-        Killer = Other; // suicides, gibbed, crushed, etc.. killer is missing then.
+	local PlayerReplicationInfo OtherPRI;
 
-    super(TeamGame).ScoreKill(Killer, Other); // ignore ELTTeamGame.
+	OtherPRI = Other.PlayerReplicationInfo;
+    if ( OtherPRI != None )
+    {
+        // Increment used-lives counter
+        OtherPRI.NumLives++;
+
+    	// Check if we have used up all our lives
+        if ( (MaxLives > 0) && (OtherPRI.NumLives >= MaxLives) )
+            OtherPRI.bOutOfLives = true;
+    }
+
+    super(TeamGame).ScoreKill(Killer, Other); // ignore ELTTeamGame implementation.
 }
 
 /**
@@ -332,42 +342,14 @@ function Reset() { }
 
 
 /**
- * RestartPlayer()
- *
- * This differs from the "ELTTeamGame" version,
- * by only respawning if there is no round in progress.
- *
- * Without this bit, MaxLives=1 was rendered ineffective.
- */
-function RestartPlayer(Controller C)
-{
-    local Controller Attacker;
-    Attacker = GetCurrentAttacker();
-
-    Log("RestartPlayer:"@C);
-
-    if ( IsAttackingTeam ( C.GetTeamNum() ) ) {
-        if ( C != Attacker ) {
-            C.PlayerReplicationInfo.NumLives = 0;
-            C.PlayerReplicationInfo.bOutOfLives = true;
-        }
-    } else if ( !bRoundInProgress ) {
-        C.PlayerReplicationInfo.NumLives = 1;
-        C.PlayerReplicationInfo.bOutOfLives = false;
-    }
-
-    Super(TeamGame).RestartPlayer(C); // skip ELTTeamGame, use standard TeamGame
-}
-
-/**
  * RestartAllPlayers()
- *
  * Respawn all active players
  */
 function RestartAllPlayers()
 {
     local Controller C, NextC;
     C = Level.ControllerList;
+
     while ( C != none ) {
         NextC = C.NextController;
         if ( C.PlayerReplicationInfo == None || !C.PlayerReplicationInfo.bOnlySpectator ) {
@@ -388,7 +370,7 @@ function ResetLevel()
     local Controller C, NextC;
     local GameObjective GO;
 
-    Log("ResetLevel");
+    Log("----------- RESET LEVEL ----------");
 
     // Force bTeamScoreRounds to avoid having TeamScores reset to 0
     bTeamScoreRounds = true;
@@ -578,15 +560,17 @@ DefaultProperties
 {
     Acronym="ELT"
     GameName="Elite Roundbased Game"
+    Description="DO NOT USE THIS MODE. Use 'Elite' or 'Elite TeamGame'."
+
+    bTeamScoreRounds=false
+
+    RoundTimeLimit=45
+    ResetTimeDelay=5
+    NumRounds=6
+
     HUDType="EliteMod.ELTRoundGameHUD"
-    bTeamScoreRounds=false  // score rounds, not kills
 
-    // gameplay
-    NumRounds=6        // number of rounds per match
-    RoundTimeLimit=45  // total playable seconds per round
-    ResetTimeDelay=5   // countdown before next round
-
-    // announcers
+    // sounds
     bSkipPlaySound=true
     DrawGameSound=Draw_Game
     NewRoundSound=New_assault_in

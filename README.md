@@ -47,4 +47,3 @@ Version 3, 29 June 2007
 
 Playable Downloads will be linked on the website of this mod: 
 http://elitemod.info
-
