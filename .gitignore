@@ -15,7 +15,9 @@ System/*
 !System/EliteMapUtils.u
 !System/EliteMapUtils.ucl
 
+Maps/*
 
+!Maps/ELT-*
 
 
 ############
