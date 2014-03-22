@@ -2,7 +2,7 @@ Elite
 =====
 
 Custom 3v3 GameType for UT2004 
-http://elitemod.info
+
 
 ## About
 
@@ -33,17 +33,8 @@ i can review them. Once i accept them into this repo the changes will be part of
 
 - https://github.com/elitemod/elite/pulls
 
-## Authoring
-
-Each folder has a seperate README with further details about the code.
-
 ## License
 
 GPL, GNU General Public License
 Version 3, 29 June 2007
 
-
-## Download for Non-Coders
-
-Playable Downloads will be linked on the website of this mod: 
-http://elitemod.info
