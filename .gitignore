@@ -8,6 +8,16 @@
 !EliteMapUtils/
 !EliteMapUtils/Classes/
 
+System/*
+
+!System/EliteMod.u
+!System/EliteMod.ucl
+!System/EliteMapUtils.u
+!System/EliteMapUtils.ucl
+
+
+
+
 ############
 Thumbs.db
 Desktop.ini
